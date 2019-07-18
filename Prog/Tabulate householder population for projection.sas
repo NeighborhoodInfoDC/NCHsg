@@ -3,7 +3,7 @@
  Library:  RegHsg
  Project:  NeighborhoodInfo DC
  Author:   Yipeng Su
- Created:  1/8/19
+ Created:  7/16/19
  Version:  SAS 9.2
  Environment:  Local Windows session (desktop)
  
@@ -80,7 +80,7 @@ proc format;
     17 = "80-84 years old"
     18= "85+ years old";
 
-	value Jurisdiction
+	value county
     1= "District of Columbia"
 	2= "Charles County"
 	3= "Frederick County "
@@ -98,16 +98,16 @@ run;
 
 
 	data Household_&year. (where=(upuma in ("1100101", "1100102", "1100103", "1100104", "1100105", "2401600", "2400301", "2400302","2401001", "2401002", "2401003", "2401004", "2401005", "2401006", "2401007", "2401101", "2401102", "2401103", "2401104", "2401105", "2401106", "2401107", "5101301", "5101302", "5159301", "5159302", "5159303", "5159304", "5159305", "5159306", "5159307", "5159308", "5159309", "5110701", "5110702" , "5110703", "5151244", "5151245", "5151246", "5151255")));
-		set Ipums.Acs_&year._dc Ipums.Acs_&year._md Ipums.Acs_&year._va;
+		set Ipums.Acs_&year._NC;
 
-		%assign_jurisdiction;
+		%assign_NCcounty;
 
 	run;
 
 
 	data Householddetail_&year.;
 		set Household_&year.;
-		keep race hispan age hhincome pernum relate gq Jurisdiction hhwt perwt year serial numprec race1 agegroup totpop_&year.;
+		keep race hispan age hhincome pernum relate gq county hhwt perwt year serial numprec race1 agegroup totpop_&year.;
 
 		 %Hud_inc_RegHsg( hhinc=hhincome, hhsize=numprec )
 		  label
