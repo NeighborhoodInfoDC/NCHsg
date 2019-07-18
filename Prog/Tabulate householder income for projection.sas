@@ -8,21 +8,7 @@
  Environment:  Local Windows session (desktop)
  
  Description:  Produce detailed tabulation of household income distribution by holders' age group, race ethnicity and jurisciation from 2013-2017
- ACS IPUMS data for the COGS region:
- DC (11001)
- Charles County(24017)
- Frederick County(24021)
- Montgomery County (24031)
- Prince George's County(24033)
- Arlington County (51013)
- Fairfax County (51059)
- Loudoun County (51107)
- Prince William County (51153)
- Alexandria City (51510)
- Fairfax City (51600)
- Falls Church City (51610)
- Manassas City (51683)
- Manassas Park City (51685)
+ ACS IPUMS data for NC:
 
  Modifications: 
 
@@ -80,18 +66,6 @@ proc format;
     17 = "80-84 years old"
     18= "85+ years old";
 
-	value Jurisdiction
-    1= "District of Columbia"
-	2= "Charles County"
-	3= "Frederick County "
-	4="Montgomery County"
-	5="Prince George's County"
-	6="Arlington County"
-	7="Fairfax, Fairfax City, and Falls Church"
-	8="Loudoun County"
-	9="Prince William, Manassas, and Manassas Park"
-    10="City of Alexandria";
-
 	value newinc
 	1= "$0-32,600"
 	2= "32,600-54,300"
@@ -109,33 +83,41 @@ run;
 	data Household_&year. ;
 		set Ipums.Acs_&year._NC;
 
-	 /* %assign_jurisdiction;*/
+		%assign_NCcounty;
+		%assign_NCcounty2;
+
+		fips2010= "37"+ county;
 
 	run;
 
+	data Inc_&year. ;
+	set NCHsg.IncomeLimits_&year._NC (where= (State==37));
+
+	run;
+
+	proc sort data= Household_&year. ;
+	by fips2010;
+	run;
+
+	proc sort data= Inc_&year. ;
+	by fips2010;
+	run;
+
+	data Household_&year._2 ;
+	merge Household_&year. Inc_&year.;
+	by fips2010 ;
+	run;
 
 	data Householddetail_&year.;
-		set Household_&year. (where=(relate=1));
-		keep race hispan age hhincome hhincome_a pernum relate gq Jurisdiction hhwt perwt year serial numprec race1 agegroup incomecat totpop_&year.;
+		set Household_&year._2 (where=(relate=1));
+		keep race hispan age hhincome hhincome_a pernum relate gq Jurisdiction hhwt perwt year serial numprec race1 agegroup incomecat totpop_&year. I50_1- I50_8 I30_1- I30_8 I80_1- I80_8  median&year. ;
 
 		%dollar_convert( hhincome, hhincome_a, &year., 2016, series=CUUR0000SA0 )
 
-		/*
-		 %Hud_inc_RegHsg( hhinc=hhincome_a, hhsize=numprec )
+        %Hud_inc_NCHsg( hhinc=hhincome, hhsize=numprec )
 		  label
 		  hud_inc = 'HUD income category for household'; 
-		
-		if hhincome_a in ( 9999999, .n , . ) then incomecat=.;
-		else do; 
-		    if hhincome_a<=32600 then incomecat=1;
-			else if 32600<hhincome_a<=54300 then incomecat=2;
-			else if 54300<hhincome_a<=70150 then incomecat=3;
-			else if 70150<hhincome_a<=108600 then incomecat=4;
-			else if 108600<hhincome_a<=130320 then incomecat=5;
-			else if 130320<hhincome_a<=217200 then incomecat=6;
-			else if 217200 < hhincome_a then incomecat=7;
-		end;
-*/
+
 		if hispan=0 then do;
 
 		 if race=1 then race1=1;
@@ -158,11 +140,11 @@ run;
 	run;
 
 	proc freq data=Householddetail_&year.;
-	tables incomecat/missing; 
+	tables hud_inc/missing; 
 	run;
 
 	proc sort data=Householddetail_&year.;
-	by Jurisdiction agegroup race1 relate incomecat;
+	by county2 agegroup race1 relate hud_inc;
 	run;
 
 %mend householdinfo;
@@ -180,11 +162,11 @@ totalpop=0.2;
 run;
 /*total COG*/
 proc sort data=fiveyeartotal;
-by agegroup race1 incomecat;
+by agegroup race1 hud_inc;
 run;
 
 proc summary data=fiveyeartotal;
-class agegroup race1 incomecat;
+class agegroup race1 hud_inc;
 	var totalpop;
 	weight hhwt;
 	output out = Householderbreakdown (where=(_TYPE_=7)) sum=;
@@ -196,7 +178,7 @@ run;
 
 proc transpose data=Householderbreakdown out=distribution;
 by agegroup race1;
-id incomecat;
+id hud_inc;
 var totalpop;
 run;
 
@@ -221,21 +203,21 @@ run;
 
 /****by jurisdiction****/
 proc sort data=fiveyeartotal;
-by Jurisdiction agegroup race1 incomecat;
+by county2 agegroup race1 hud_inc;
 proc summary data=fiveyeartotal;
-class Jurisdiction agegroup race1 incomecat;
+class county2 agegroup race1 hud_inc;
 	var totalpop;
 	weight hhwt;
 	output out = Householderbreakdown_NC(where=(_TYPE_=15)) sum=;
-	format race1 racenew. agegroup agegroupnew. Jurisdiction Jurisdiction.;
+	format race1 racenew. agegroup agegroupnew. county2 county2.;
 run;
 proc sort data=Householderbreakdown_NC;
-by Jurisdiction agegroup race1 ;
+by county2 agegroup race1 ;
 run;
 
 proc transpose data=Householderbreakdown_NC out=NCdistribution;
-by Jurisdiction agegroup race1 ;
-id incomecat;
+by county2 agegroup race1 ;
+id hud_inc;
 var totalpop;
 run;
 proc stdize data=NCdistribution out=NCdistribution_2 reponly missing=0;
@@ -253,11 +235,11 @@ data NCdistribution_3;
 	incomecat7=_7/denom ;
 run;
 proc sort data= NCdistribution_3;
-by Jurisdiction race1 agegroup;
+by county2 race1 agegroup;
 run;
 
 proc export data = NCdistribution_3
-   outfile="&_dcdata_default_path\NCHsg\Prog\Householderincometab_Jurisdiction_&date..csv"
+   outfile="&_dcdata_default_path\NCHsg\Prog\Householderincometab_county_&date..csv"
    dbms=csv
    replace;
 run;

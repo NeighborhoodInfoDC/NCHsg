@@ -1,9 +1,9 @@
 /**************************************************************************
- Program:  Hud_inc_RegHsg.sas
- Library:  RegHsg
+ Program:  Hud_inc_NCHsg.sas
+ Library:  NCHsg
  Project:  NeighborhoodInfo DC
  Author:   Yipeng Su
- Created:  4/12/2018
+ Created:  7/18/2019
  Version:  SAS 9.2
  Environment:  Windows
  
@@ -19,7 +19,7 @@
  6  =  >=200% (extremely high)
  -99  =  N/A (income not reported)
 
- Modifications: Yipeng Su from Hud_inc_2016 for RegHsg project.
+ Modifications: Yipeng Su from Hud_inc_2016 for NCHsg project.
 **************************************************************************/
 
 /** Macro Hud_inc_RegHsg - Start Definition **/
@@ -34,10 +34,10 @@
     select ( &hhsize. );
       when ( 1 )
         do;
-          if &hhinc. <= 22850 then hud_inc = 1;
-          else if 22850 < &hhinc. <= 38050 then hud_inc = 2;
-          else if 38050 < &hhinc. <= 49150 then hud_inc = 3;
-          else if 49150 < &hhinc. <= 91320 then hud_inc = 4;
+          if &hhinc. <= I130_1 then hud_inc = 1;
+          else if I30_1 < &hhinc. <= I50_1 then hud_inc = 2;
+          else if I50_1 < &hhinc. <= I80_1 then hud_inc = 3;
+          else if I80_1 < &hhinc. <= I120_1 then hud_inc = 4;
           else if 91320 < &hhinc. <= 152200 then hud_inc = 5;
 		  else if 152200 <&hhinc.  then hud_inc=6;
         end;
