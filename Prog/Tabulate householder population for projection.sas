@@ -68,21 +68,6 @@ proc format;
     18= "85+ years old";
 run;
 
-	data Household_2017;
-		set Ipums.Acs_2017_NC;
-
-		%assign_NCcounty;
-		county_char = put(county, 5.);
-
-
-	run;
-
-	data Inc_2017 ;
-	set NCHsg.IncomeLimits_2017 (where= (State=37));
-
-	run;
-
-
 
 %macro householdinfo(year);
 
@@ -121,7 +106,7 @@ run;
 		set Household_&year._2;
 		keep race hispan age hhincome pernum relate gq county hhwt perwt year serial numprec race1 agegroup totpop_&year. I50_1- I50_8 I30_1- I30_8 I80_1- I80_8  median&year.   ;
 
-		 %Hud_inc_NCHsg( hhinc=hhincome, hhsize=numprec )
+		 %Hud_inc_NCHsg( hhinc=hhincome_a, hhsize=numprec )
 		  label
 		  hud_inc = 'HUD income category for household'; 
 

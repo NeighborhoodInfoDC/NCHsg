@@ -77,7 +77,6 @@ proc format;
 
 run;
 
-
 %macro householdinfo(year);
 
 
@@ -110,11 +109,11 @@ run;
 
 	data Householddetail_&year.;
 		set Household_&year._2 (where=(relate=1));
-		keep race hispan age hhincome hhincome_a pernum relate gq Jurisdiction hhwt perwt year serial numprec race1 agegroup incomecat totpop_&year. I50_1- I50_8 I80_1- I80_8  median&year. ;
+		keep race hispan age hhincome hhincome_a pernum relate gq county county2 hhwt perwt year serial numprec race1 agegroup incomecat totpop_&year. I50_1- I50_8 I80_1- I80_8  median&year. ;
 
 		%dollar_convert( hhincome, hhincome_a, &year., 2016, series=CUUR0000SA0 )
 
-        %Hud_inc_NCHsg( hhinc=hhincome, hhsize=numprec )
+        %Hud_inc_NCHsg( hhinc=hhincome_a, hhsize=numprec )
 		  label
 		  hud_inc = 'HUD income category for household'; 
 
