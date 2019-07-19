@@ -77,6 +77,42 @@ proc format;
 
 run;
 
+
+	data Household_2017 ;
+		set Ipums.Acs_2017_NC;
+
+		%assign_NCcounty;
+
+		county_char = put(county, 5.);
+
+
+	run;
+
+	data Inc_2017 ;
+	set NCHsg.IncomeLimits_2017 (where= (State=37));
+        county2 = put(County,z3.);
+        state2= put(State, z2.);
+		county_char= cats(state2, county2);
+		county_char= put(county_char, z5.);
+	run;
+
+	proc sort data= Household_2017;
+	by county_char;
+	run;
+
+	proc sort data= Inc_2017 ;
+	by county_char;
+	run;
+
+	proc contents data=Inc_2017;
+	run;
+
+	data Household_2017_2 ;
+	merge Household_2017 Inc_2017;
+	by county_char ;
+	run;
+
+
 %macro householdinfo(year);
 
 
@@ -84,27 +120,25 @@ run;
 		set Ipums.Acs_&year._NC;
 
 		%assign_NCcounty;
-
-		fips2010= "37"+ county;
-
+		county_char = put(county, 5.);
 	run;
 
 	data Inc_&year. ;
-	set NCHsg.IncomeLimits_&year._NC (where= (State==37));
+	set NCHsg.IncomeLimits_&year. (where= (State=37));
 
 	run;
 
 	proc sort data= Household_&year. ;
-	by fips2010;
+	by county_char;
 	run;
 
 	proc sort data= Inc_&year. ;
-	by fips2010;
+	by county_char;
 	run;
 
 	data Household_&year._2 ;
 	merge Household_&year. Inc_&year.;
-	by fips2010 ;
+	by county_char ;
 	run;
 
 	data Householddetail_&year.;

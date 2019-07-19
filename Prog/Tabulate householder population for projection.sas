@@ -1,6 +1,6 @@
 /**************************************************************************
  Program:  tabulate householder population for projection.sas
- Library:  RegHsg
+ Library:  NCHsg
  Project:  NeighborhoodInfo DC
  Author:   Yipeng Su
  Created:  7/16/19
@@ -18,10 +18,10 @@
 %include "L:\SAS\Inc\StdLocal.sas";
 
 ** Define libraries **;
-%DCData_lib( RegHsg)
+%DCData_lib( NCHsg)
 %DCData_lib( Ipums)
 
-%let date=02132019;
+%let date=07192019;
 
 proc format;
 
@@ -66,20 +66,23 @@ proc format;
     16= "75-79 years old" 
     17 = "80-84 years old"
     18= "85+ years old";
-
-	value county
-    1= "District of Columbia"
-	2= "Charles County"
-	3= "Frederick County "
-	4="Montgomery County"
-	5="Prince George's County"
-	6="Arlington County"
-	7="Fairfax, Fairfax City, and Falls Church"
-	8="Loudoun County"
-	9="Prince William, Manassas, and Manassas Park"
-    10="City of Alexandria";
-
 run;
+
+	data Household_2017;
+		set Ipums.Acs_2017_NC;
+
+		%assign_NCcounty;
+		county_char = put(county, 5.);
+
+
+	run;
+
+	data Inc_2017 ;
+	set NCHsg.IncomeLimits_2017 (where= (State=37));
+
+	run;
+
+
 
 %macro householdinfo(year);
 
@@ -89,26 +92,26 @@ run;
 
 		%assign_NCcounty;
 
-		fips2010= "37"+ county;
+		fips2010= "37"+ COUNTYFIP;
 
 	run;
 
 	data Inc_&year. ;
-	set NCHsg.IncomeLimits_&year._NC (where= (State==37));
+	set NCHsg.IncomeLimits_&year. (where= (State=37));
 
 	run;
 
 	proc sort data= Household_&year. ;
-	by fips2010;
+	by county_char;
 	run;
 
 	proc sort data= Inc_&year. ;
-	by fips2010;
+	by county_char;
 	run;
 
 	data Household_&year._2 ;
 	merge Household_&year. Inc_&year.;
-	by fips2010 ;
+	by county_char ;
 	run;
 
 
