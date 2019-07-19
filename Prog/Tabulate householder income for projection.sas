@@ -17,10 +17,10 @@
 %include "L:\SAS\Inc\StdLocal.sas";
 
 ** Define libraries **;
-%DCData_lib( RegHsg)
+%DCData_lib( NCHsg)
 %DCData_lib( Ipums)
 
-%let date=07112019; 
+%let date=07192019; 
 
 proc format;
 
@@ -110,7 +110,7 @@ run;
 
 	data Householddetail_&year.;
 		set Household_&year._2 (where=(relate=1));
-		keep race hispan age hhincome hhincome_a pernum relate gq Jurisdiction hhwt perwt year serial numprec race1 agegroup incomecat totpop_&year. I50_1- I50_8 I30_1- I30_8 I80_1- I80_8  median&year. ;
+		keep race hispan age hhincome hhincome_a pernum relate gq Jurisdiction hhwt perwt year serial numprec race1 agegroup incomecat totpop_&year. I50_1- I50_8 I80_1- I80_8  median&year. ;
 
 		%dollar_convert( hhincome, hhincome_a, &year., 2016, series=CUUR0000SA0 )
 
