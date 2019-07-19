@@ -84,7 +84,6 @@ run;
 		set Ipums.Acs_&year._NC;
 
 		%assign_NCcounty;
-		%assign_NCcounty2;
 
 		fips2010= "37"+ county;
 
