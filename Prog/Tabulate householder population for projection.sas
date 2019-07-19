@@ -98,7 +98,9 @@ run;
 
 	data Inc_&year. ;
 	set NCHsg.IncomeLimits_&year. (where= (State=37));
-
+        county2 = put(County,z3.);
+        state2= put(State, z2.);
+        county_char= state2||county2;
 	run;
 
 	proc sort data= Household_&year. ;
