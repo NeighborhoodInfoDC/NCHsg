@@ -101,7 +101,7 @@ run;
 
 	data Householddetail_&year.;
 		set Household_&year._2 (where=(relate=1));
-		keep race hispan age hhincome hhincome_a pernum relate gq county county2 hhwt perwt year serial numprec race1 agegroup hud_inc totpop_&year. I50_1- I50_8 I80_1- I80_8  median&year. ;
+		keep race hispan age hhincome hhincome_a pernum relate gq county county2 hhwt perwt year serial numprec race1 agegroup hud_inc totpop_&year. l50_1- l50_8 l80_1- l80_8  median&year. ;
 
 		%dollar_convert( hhincome, hhincome_a, &year., 2016, series=CUUR0000SA0 )
 
