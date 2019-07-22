@@ -76,9 +76,7 @@ run;
 		set Ipums.Acs_&year._NC;
 
 		%assign_NCcounty;
-
-		fips2010= "37"+ COUNTYFIP;
-
+		county_char = put(county, 5.);
 	run;
 
 	data Inc_&year. ;
@@ -101,10 +99,9 @@ run;
 	by county_char ;
 	run;
 
-
-	data Householddetail_&year._3;
+	data Householddetail_&year.;
 		set Household_&year._2;
-		keep race hispan age hhincome pernum relate gq county hhwt perwt year serial numprec race1 agegroup totpop_&year. I50_1- I50_8 I30_1- I30_8 I80_1- I80_8  median&year.   ;
+		keep race hispan age hhincome hhincome_a pernum relate gq county hhwt perwt year serial numprec race1 agegroup hud_inc totpop_&year. I50_1- I50_8 I30_1- I30_8 I80_1- I80_8  median&year.   ;
 
 		 %Hud_inc_NCHsg( hhinc=hhincome_a, hhsize=numprec )
 		  label

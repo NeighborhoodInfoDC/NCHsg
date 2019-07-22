@@ -66,14 +66,6 @@ proc format;
     17 = "80-84 years old"
     18= "85+ years old";
 
-	value newinc
-	1= "$0-32,600"
-	2= "32,600-54,300"
-	3="$54,300-70,150"
-	4="$86,880-108,600"
-	5="$108,600-130,320"
-	6="$130,320-217,200"
-	7="More than 217,200";
 
 run;
 
@@ -109,7 +101,7 @@ run;
 
 	data Householddetail_&year.;
 		set Household_&year._2 (where=(relate=1));
-		keep race hispan age hhincome hhincome_a pernum relate gq county county2 hhwt perwt year serial numprec race1 agegroup incomecat totpop_&year. I50_1- I50_8 I80_1- I80_8  median&year. ;
+		keep race hispan age hhincome hhincome_a pernum relate gq county county2 hhwt perwt year serial numprec race1 agegroup hud_inc totpop_&year. I50_1- I50_8 I80_1- I80_8  median&year. ;
 
 		%dollar_convert( hhincome, hhincome_a, &year., 2016, series=CUUR0000SA0 )
 
@@ -154,7 +146,11 @@ run;
 %householdinfo(2016);
 %householdinfo(2017);
 
-/*remove serial 560493 and 255313 from 2013 as the are classified HoH but really reflect GQ - GQ=5 - have 11 and 20 people in the household)*/
+proc freq data= Householddetail_2013 (where=(numprec=20));
+tables serial;
+run;
+
+/*remove serial 912573 and 255313 from 2013 as the are classified HoH but really reflect GQ - GQ=5 - have more than 10(16 and 20) people in the household)*/
 data fiveyeartotal;
 set Householddetail_2013 (where=(serial~=560493 and serial~=255313)) Householddetail_2014 Householddetail_2015 Householddetail_2016 Householddetail_2017;
 totalpop=0.2;
