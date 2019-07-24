@@ -76,14 +76,15 @@ run;
 		set Ipums.Acs_&year._NC;
 
 		%assign_NCcounty;
+		%assign_NCcounty2;
 		county_char = put(county, 5.);
 	run;
 
 	data Inc_&year. ;
 	set NCHsg.IncomeLimits_&year. (where= (State=37));
-        county2 = put(County,z3.);
+        county_new = put(County,z3.);
         state2= put(State, z2.);
-        county_char= state2||county2;
+        county_char= state2||county_new;
 	run;
 
 	proc sort data= Household_&year. ;

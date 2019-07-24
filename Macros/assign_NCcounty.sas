@@ -105,7 +105,7 @@
 	
 
 /*one county contains/overlaps with several PUMAs */
-	when ( in ("37002201","3702202" ) 
+	when ("3702201","3702202" ) 
       county =37021;  
 	
 	when ("3703200") 
