@@ -21,7 +21,7 @@
 %DCData_lib( NCHsg)
 %DCData_lib( Ipums)
 
-%let date=07192019;
+%let date=08072019;
 
 proc format;
 
@@ -74,52 +74,18 @@ run;
 
 	data Household_&year. ;
 		set Ipums.Acs_&year._NC;
-
+/*create county for merging with income limits and county2 for tabulating*/
 		%assign_NCcounty;
-		%assign_NCcounty;
+		%assign_NCcounty2;
 		county_char = put(county, 5.);
+		county2_char = put(county2, 5.);
 	run;
 
-	data Inc_&year. ;
-	set NCHsg.IncomeLimits_&year. (where= (State=37));
-        county_new = put(County,z3.);
-        state2= put(State, z2.);
-        county_char= state2||county_new;
-	run;
-
-	proc sort data= Household_&year. ;
-	by county_char;
-	run;
-
-	proc sort data= Inc_&year. ;
-	by county_char;
-	run;
-
-	data Household_&year._2 ;
-	merge Household_&year. Inc_&year.;
-	by county_char ;
-	run;
 
 	data Householddetail_&year.;
-		set Household_&year._2;
-		keep race hispan age hhincome hhincome_a pernum relate gq county hhwt perwt year serial numprec race1 agegroup hud_inc totpop_&year. l50_1- l50_8 l80_1- l80_8  median&year.   ;
+		set Household_&year. ;
+		keep race hispan age hhincome pernum relate gq puma county2_char upuma hhwt perwt year serial numprec race1 agegroup  totpop_&year. ;
 
-		 %Hud_inc_NCHsg( hhinc=hhincome_a, hhsize=numprec )
-		  label
-		  hud_inc = 'HUD income category for household'; 
-
-		  /*
-		if HHINCOME in ( 9999999, .n , . ) then incomecat=.;
-		else do; 
-		    if HHINCOME<=32600 then incomecat=1;
-			else if 32600<HHINCOME<=54300 then incomecat=2;
-			else if 54300<HHINCOME<=70150 then incomecat=3;
-			else if 70150<HHINCOME<=108600 then incomecat=4;
-			else if 108600<HHINCOME<=130320 then incomecat=5;
-			else if 130320<HHINCOME<=217200 then incomecat=6;
-			else if 217200 < HHINCOME then incomecat=7;
-		end;
-*/
 		if hispan=0 then do;
 
 		 if race=1 then race1=1;
@@ -154,21 +120,36 @@ run;
 %householdinfo(2017);
 
 
-/*change serial 560493 and 255313 in 2013 from HoH to other nonrelative as they really reflect GQ (GQ=5) and those households have 11 and 20 people (not related)*/
-/*
-data Householddetail_2013r;
-	set Householddetail_2013;
+/*make sure all PUMA got assigned a geography for tabulation*/
+proc freq data= Household_2013 (where=(county2_char=""));
+tables upuma;
+run;
 
-if serial in (560493, 255313) then relate=12;
+/*remove numprec >10 from 2013-2017 as the are classified HoH but really reflect GQ - GQ=5 )*/
+%macro droplargeHH(year);
+
+data Householddetail_&year._r;
+	set Householddetail_&year.;
+
+if numprec in (11, 12, 13, 14, 15, 16, 17, 18, 19, 20) then drop=1;
 
 run; 
-*/
 
+%mend droplargeHH;
+
+%droplargeHH(2013);
+%droplargeHH(2014);
+%droplargeHH(2015);
+%droplargeHH(2016);
+%droplargeHH(2017);
+
+/*compile 13-17 data for tabulation*/
 data fiveyeartotal;
-set Householddetail_2013_3 Householddetail_2014_3 Householddetail_2015_3 Householddetail_2016_3 Householddetail_2017_3;
+set Householddetail_2013_r(where=(drop~= 1 )) Householddetail_2014_r(where=(drop~= 1 )) Householddetail_2015_r(where=(drop~= 1 )) Householddetail_2016_r(where=(drop~= 1 )) Householddetail_2017_r(where=(drop~= 1 ));
 totalpop=0.2;
 run;
-/*total COG*/
+
+/*total NC*/
 
 proc sort data=fiveyeartotal;
 by agegroup race1 relate;
@@ -186,6 +167,7 @@ proc sort data=Householdbreakdown;
 	by agegroup race1;
 run;
 
+/*transpose summary table for calculating ratios*/
 proc transpose data=Householdbreakdown out=distribution;
 	by agegroup race1;
 	id relate;
@@ -209,21 +191,21 @@ run;
 /*by county*/
 
 proc sort data=fiveyeartotal;
-	by county2 agegroup race1 relate;
+	by county2_char agegroup race1 relate;
 run;
 proc summary data=fiveyeartotal;
-class county2 agegroup race1 relate;
+class county2_char agegroup race1 relate;
 	var totalpop;
 	weight perwt;
 	output out = Householdbreakdown_NC(where=(_TYPE_=15)) sum=;
-	format race1 racenew. agegroup agegroupnew. county2 County.;
+	format race1 racenew. agegroup agegroupnew. ;
 run;
 proc sort data=Householdbreakdown_NC;
-	by agegroup race1 county2;
+	by agegroup race1 county2_char;
 run;
 
 proc transpose data=Householdbreakdown_NC out=NCdistribution;
-	by agegroup race1 county2;
+	by agegroup race1 county2_char;
 	id relate;
 	var totalpop;
 run;
@@ -236,11 +218,11 @@ data NCdistribution_3;
 	percenthouseholder=Head_Householder/denom ;
 run;
 proc sort data= NCdistribution_3;
-	by county2 race1 agegroup;
+	by county2_char race1 agegroup;
 run;
 
 proc export data = NCdistribution_3
-   outfile="&_dcdata_default_path\NCHsg\Prog\Householderratio_county_&date..csv"
+   outfile="&_dcdata_default_path\NCHsg\Prog\Householderratio_NCcounty_&date..csv"
    dbms=csv
    replace;
 run;
