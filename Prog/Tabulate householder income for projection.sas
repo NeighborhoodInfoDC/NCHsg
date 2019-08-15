@@ -152,6 +152,116 @@ run;
 %householdinfo(2016);
 %householdinfo(2017);
 
+/*tabulate deciles of income for state*/
+
+proc univariate data= Household_2013;
+var  hhincome;
+weight hhwt;
+output pctlpre= P_ pctlpts= 10 to 100 by 10 ;
+run;
+proc print data= data1 noobs;
+run;
+data Household_2013_decile;
+set Household_2013;
+totpop=1;
+ if hhincome <= 13600 then inc = 1; 
+       else if 13600 < hhincome <= 23300 then inc = 2;
+       else if 23300 < hhincome <= 32000 then inc = 3;
+       else if 32000 < hhincome <= 41900 then inc = 4;
+       else if 41900 < hhincome <= 52300 then inc = 5;
+       else if 52300 < hhincome <=65000  then inc=6;
+	   else if 65000 < hhincome <=80000  then inc=7;
+	   else if 80000 < hhincome <=101000  then inc=8;
+	   else if 101000 < hhincome <=140200  then inc=9;
+	   else if 140200 < hhincome <=1174000  then inc=10;
+
+ run;
+
+proc sort data=Household_2013_decile;
+by county2_char inc;
+run;
+
+proc summary data=Household_2013_decile;
+class county2_char inc;
+	var totpop;
+	weight hhwt;
+    output out = Householderbreakdown_decile(where=(_TYPE_=3))  sum=;
+
+run;
+
+proc sort data=Householderbreakdown_decile;
+by county2_char inc;
+run;
+
+proc transpose data=Householderbreakdown_decile out=distribution_decile;
+by county2_char;
+id inc;
+var totpop;
+run;
+
+data distribution_decile_2;
+set distribution_decile;
+keep county2_char percentile10 percentile20 percentile30 percentile40 percentile50 percentile60 percentile70 percentile80 percentile90 percentile100;
+	denom= _1+_2+_3 +_4 +_5 +_6+ _7 + _8 + _9 + _10;
+	
+	percentile10 =_1/denom ;
+	percentile20=_2/denom ;
+	percentile30=_3/denom ;
+	percentile40=_4/denom ;
+	percentile50=_5/denom ;
+	percentile60=_6/denom ;
+	percentile70=_7/denom ;
+    percentile80=_8/denom ;
+percentile90=_9/denom ;
+percentile100=_10/denom ;
+
+run;
+
+
+proc export data = distribution_decile_2
+   outfile="&_dcdata_default_path\NCHsg\Prog\distribution_decile_2013_&date..csv"
+   dbms=csv
+   replace;
+run;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 /*make sure all PUMA got assigned a geography for tabulation*/
 proc freq data= Household_2013 (where=(county2_char=""));
 tables upuma;
