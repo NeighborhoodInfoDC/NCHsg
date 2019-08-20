@@ -18,137 +18,130 @@
 
 %macro assign_NCcounty2;
 
-  select ( upuma );
-  /*one county= one PUMA green in spreadsheet*/
-    when ("3701600") 
-      county2 =37001;
-    when ("3704800") 
-      county2 =37019;
-    when ("3702800") 
-      county2 =37035;
-    when ("3704300") 
-      county2 =37049;
-    when ("3703500") 
-      county2 =37057;
-    when ("3703800") 
-      county2 =37085;
-    when ("3701100") 
-      county2 =37101;
-    when ("3701400") 
-      county2 =37135;
-    when ("3704200") 
-      county2 =37147; 
-    when ("3703600") 
-      county2 =37151; 
-	when ("3703400") 
-      county2 =37159; 
-	when ("3704000") 
-      county2 =37191;    
+  select ( county_char );
+  /*8 counties that contain multiple PUMAs*/
+    when ("37183") 
+      county2 = 37183;
+    when ("37063") 
+      county2 =37063;
+    when ("37081") 
+      county2 =37081;
+    when ("37067") 
+      county2 =37067;
+    when ("37021") 
+      county2 =37021;
+    when ("37071") 
+      county2 =37071;
+    when ("37119") 
+      county2 =37119;
+    when ("37051") 
+      county2 =37051;
 
- /*one PUMA contains several counties, orange in spreadsheet */
-	when ("3700100") 
-      county2 =100;  
-	when ("3700200") 
-      county2 =200;  
-	when ("3700300") 
-      county2 =300;  
-	when ("3700400") 
-      county2 =400;  
-	when ("3700500") 
-      county2 =500;  
-	when ("3700600") 
-      county2 =600;  
-	when ("3700700") 
-      county2 =700;  
-	when ("3700800") 
-      county2 =800;  
-	when ("3700900") 
-      county2 =900;  
-	when ("3701000") 
-      county2 =1000;  
-	when ("3701500") 
-      county2 =1500;  
-	when ("3701900") 
-      county2 =1900;  
-	when ("3702000") 
-      county2 =2000;  
-	when ("3702100") 
-      county2 =2100;  
-	when ("3702300") 
-      county2 =2300;  
-	when ("3702400") 
-      county2 =2400;  
-	when ("3702500") 
-      county2 =2500;  
-	when ("3702600") 
-      county2 =2600;  
-	when ("3702700") 
-      county2 =2700;  
-	when ("3703300") 
-      county2 =3300;  
-	when ("3703700") 
-      county2 =3700;  
-	when ("3703900") 
-      county2 =3900;  
-	when ("3704100") 
-      county2 =4100;  
-	when ("3704400") 
-      county2 =4400;  
-	when ("3704600") 
-      county2 =4600;  
-	when ("3704900") 
-      county2 =4900;  
-	when ("3705200") 
-      county2 =5200;  
-	when ("3705300") 
-      county2 =5300;  
-	
-/*one county contains/overlaps with several PUMAs, blue in spreadsheet */
-
-	when ("3702201","3702202" ) 
-      county2 =37021;  
-	
-	when ("3703200") 
-      county2 =37025;  
-
-	when  ("3705001","3705002","3705003" ) 
-      county2 =37051;  
-
-	when  ("3701301","3701302" ) 
-      county2 =37063;  
-
-	when  ("3701801","3701802","3701803" ) 
-      county2 =37067;  
-
-	when  ("3703001","3703002" ) 
-      county2 =37071;  
-
-	when  ("3701701","3701702", "3701703", "3701704" ) 
-      county2 =37081;  
-
-	when ("3702900") 
+ /*18 counties that contain a single PUMA */
+	when ("37101") 
+      county2 =37101;  
+	when ("37135") 
+      county2 =37135;  
+	when ("37001") 
+      county2 =37001;  
+	when ("37035") 
+      county2 =37035;  
+	when ("37097") 
       county2 =37097;  
-
-	when ("3703101","3703102","3703103","3703104","3703105", "3703106","3703107","3703108") 
-      county2 =37119;  
-
-	when ("3704700") 
-      county2 =37129;  
-
-	when ("3704500") 
+	when ("37025") 
+      county2 =37025;  
+	when ("37159") 
+      county2 =37159;  
+	when ("37057") 
+      county2 =37057;  
+	when ("37151") 
+      county2 =37151;  
+	when ("37850") 
+      county2 =37085;  
+	when ("37191") 
+      county2 =37191;  
+	when ("37147") 
+      county2 =37147;  
+	when ("37049") 
+      county2 =37049;  
+	when ("37133") 
       county2 =37133;  
-
-	when ("3705100") 
+	when ("37129") 
+      county2 =37129;  
+	when ("37019") 
+      county2 =37019;  
+	when ("37155") 
       county2 =37155;  
-
-	when ("3705400") 
+	when ("37179") 
       county2 =37179;  
-
-	when  ("3701201","3701202" ,"3701203","3701204","3701205","3701206","3701207","3701208") 
-      county2 =37183;  
 
     otherwise
         ;
   end;
+
+
+  select ( upuma );
+  /*28 PUMAs that contain multiple counties */
+  when ("100") 
+      county2 = 100;
+    when ("200") 
+      county2 =200;
+    when ("300") 
+      county2 =300;
+    when ("400") 
+      county2 =400;
+    when ("500") 
+      county2 =500;
+    when ("600") 
+      county2 =600;
+    when ("700") 
+      county2 =700;
+    when ("800") 
+      county2 =800;
+	when ("900") 
+      county2 =900;
+	when ("1000") 
+      county2 =1000;
+	when ("1500") 
+      county2 =1500;
+	when ("1900") 
+      county2 =1900;
+	when ("2000") 
+      county2 =2000;
+	when ("2100") 
+      county2 =2100;
+	when ("2300") 
+      county2 =2300;
+	when ("2400") 
+      county2 =2400;
+	when ("2500") 
+      county2 =2500;
+	when ("2600") 
+      county2 =2600;
+	when ("2700") 
+      county2 =2700;
+	when ("3300") 
+      county2 =3300;
+	when ("3700") 
+      county2 =3700;
+	when ("3900") 
+      county2 =3900;
+	when ("4100") 
+      county2 =4100;
+	when ("4400") 
+      county2 =4400;
+	when ("4600") 
+      county2 =4600;
+	when ("4900") 
+      county2 =4900;
+	when ("5200") 
+      county2 =5200;
+	when ("5300") 
+      county2 =5300;
+
+    otherwise
+        ;
+  end;
+
  
 %mend assign_NCcounty2;
