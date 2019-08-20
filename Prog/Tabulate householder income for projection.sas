@@ -20,7 +20,7 @@
 %DCData_lib( NCHsg)
 %DCData_lib( Ipums)
 
-%let date=08072019; 
+%let date=08192019; 
 
 proc format;
 
@@ -75,8 +75,6 @@ data crosswalk;
 	set NCHsg.PUMA_county_crosswalk ;
 	county_char= put(county14, 5.);
 	length puma_new $5;
-	*puma_new = input( puma12,best5.),z5.);
-	*puma_new= translate(right(puma12),'0',' ');  /*not right*/
 	puma_new = put(input(cats(puma12),8.),z5.);
 	upuma= "37"||puma_new;
 run;
@@ -118,6 +116,7 @@ run;
         
 		/*assign the summary unit-- county if larger than PUMA, PUMA if containing more than 1 county*/
 		%assign_NCcounty2;
+		%assign_NCcounty3;
 		county2_char = put(county2, 5.);
 
 		/*inflation adjust*/

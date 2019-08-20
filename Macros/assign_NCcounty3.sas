@@ -16,10 +16,11 @@
  Modifications: YS modified the origial program in Reghsg 7/16/19
 **************************************************************************/
 
-%macro assign_NCcounty2;
+%macro assign_NCcounty3;
 
-  select ( county_char );
   /*8 counties that contain multiple PUMAs*/
+  /*select ( county_char );
+
     when ("37183") 
       county2 = 37183;
     when ("37063") 
@@ -36,9 +37,9 @@
       county2 =37119;
     when ("37051") 
       county2 =37051;
-
+*/
  /*18 counties that contain a single PUMA */
-	when ("37101") 
+	/*when ("37101") 
       county2 =37101;  
 	when ("37135") 
       county2 =37135;  
@@ -78,10 +79,10 @@
     otherwise
         ;
   end;
-
+*/
   /*28 PUMAs that contain multiple counties */
 
- /* select ( upuma );
+  select ( upuma );
 
   when ("3700100") 
       county2 = 100;
@@ -143,6 +144,6 @@
     otherwise
         ;
   end;
-*/
+
  
-%mend assign_NCcounty2;
+%mend assign_NCcounty3;
