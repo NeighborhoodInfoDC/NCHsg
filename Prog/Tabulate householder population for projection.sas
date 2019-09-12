@@ -28,8 +28,8 @@ proc format;
 	value agegroupnew
 	.n= 'Not available'
 	1='under 25 years old'
-	2= '25-45 years old'
-	3= '45-65 years old'
+	2= '25-44 years old'
+	3= '45-64 years old'
 	4='65+ years old';
   value race
    .n = 'Not available'
