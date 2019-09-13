@@ -11,8 +11,7 @@
  ACS IPUMS data for the NC region:
 
 
- Modifications: 01/16/19 LH Update incomecat for capped 80% of AMI. Add date for output. 
-			    02/13/19 LH Change relate for 2 serials to better reflect household structure. 
+ Modifications: 8/16/19 based on Steven's new race and place categories
 **************************************************************************/
 
 %include "L:\SAS\Inc\StdLocal.sas";
@@ -212,6 +211,10 @@ data NCdistribution_3;
 run;
 proc sort data= NCdistribution_3;
 	by county2_char race1 agegroup;
+run;
+
+/*should have 54 unique county2_char values*/
+PROC FREQ LEVELS data= NCdistribution_3 (keep = county2_char);
 run;
 
 proc export data = NCdistribution_3

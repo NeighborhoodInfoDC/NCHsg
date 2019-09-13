@@ -50,6 +50,7 @@ proc format;
 
 run;
 
+/*crosswalk between county and PUMA as a baseline reference for assigning projection geographies. */
 data crosswalk;
 	set NCHsg.PUMA_county_crosswalk ;
 	county_char= put(county14, 5.);
@@ -64,16 +65,6 @@ run;
 		set Ipums.Acs_&year._NC;
 		if gq=5 then relate =12;  /*reclassify and don't assign household head*/
 	run;
-
-	/* no longer need HUD income limits
-
-	data Inc_&year. ;
-	set NCHsg.IncomeLimits_&year. (where= (State=37));
-        county_new = put(County,z3.);
-        state2= put(State, z2.);
-        county_char= state2||county_new;
-	run;
-*/
 
 	proc sort data= Household_&year. ;
 	by upuma;
@@ -147,8 +138,19 @@ run;
 proc univariate data= Householddetail_&year.;
 	var  hhincome_a;
 	weight hhwt;
-	output pctlpre= P_ pctlpts= 10 to 100 by 10 ;
+	output out= inc_&year. pctlpre= P_ pctlpts= 10 to 100 by 10 ;
 run;  /*by nature of this function, the output dataset is named data1, data2, data3...*/
+
+data inc_&year._2;
+set inc_&year.;
+year= &year.;
+run;
+
+data Householddetail_&year._inc;
+	merge Householddetail_&year.(in=a) inc_&year._2;
+	if a;
+	by year ;
+run;
 
 %mend tabulateinc;
 
@@ -158,48 +160,6 @@ run;  /*by nature of this function, the output dataset is named data1, data2, da
 %tabulateinc(2016);
 %tabulateinc(2017);
 
-data inc_2013;
-set data1;
-year=2013;
-run;
-
-data inc_2014;
-set data2;
-year=2014;
-run;
-
-data inc_2015;
-set data3;
-year=2015;
-run;
-
-data inc_2016;
-set data4;
-year=2016;
-run;
-
-data inc_2017;
-set data5;
-year=2017;
-run;
-
-%macro mergeinc(year);
-
-	data Householddetail_&year._inc;
-	merge Householddetail_&year. (in=a) inc_&year.;
-	if a;
-	by year ;
-	run;
-
-%mend mergeinc;
-
-%mergeinc(2013);
-%mergeinc(2014);
-%mergeinc(2015);
-%mergeinc(2016);
-%mergeinc(2017);
-
-
 /*compile 13-17 data for tabulation */
 data fiveyeartotal;
 set Householddetail_2013_inc  Householddetail_2014_inc Householddetail_2015_inc Householddetail_2016_inc Householddetail_2017_inc;
@@ -208,7 +168,7 @@ totpop_wt= totalpop*AFACT2;
 
 if hhincome_a in ( 9999999, .n ) then inc = .n;
   else do;
-
+ /*assign income category based on each year's HH income quintile*/
 		if hhincome_a < P_10 then inc=1;
 		if P_10  =< hhincome_a < P_20 then inc=2;
 		if P_20  =< hhincome_a < P_30 then inc=3;
@@ -265,6 +225,10 @@ data NCdistribution_3;
 run;
 proc sort data= NCdistribution_3;
 by county2_char race1 agegroup;
+run;
+
+/*should have 54 unique county2_char values*/
+PROC FREQ LEVELS data= NCdistribution_3 (keep = county2_char);
 run;
 
 proc export data = NCdistribution_3
