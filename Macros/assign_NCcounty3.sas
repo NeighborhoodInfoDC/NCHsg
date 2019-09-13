@@ -57,7 +57,7 @@
       county2 =37057;  
 	when ("37151") 
       county2 =37151;  
-	when ("37850") 
+	when ("37085") 
       county2 =37085;  
 	when ("37191") 
       county2 =37191;  
