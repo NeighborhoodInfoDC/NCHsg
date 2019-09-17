@@ -20,16 +20,16 @@
 %DCData_lib( NCHsg)
 %DCData_lib( Ipums)
 
-%let date=09132019; 
+%let date=09172019; 
 
 proc format;
 
 	value agegroupnew
 	.n= 'Not available'
 	1= 'under 18 years old'
-	2= '18-25 years old'
-	3= '25-45 years old'
-	4= '45-65 years old'
+	2= '18-24 years old'
+	3= '25-44 years old'
+	4= '45-64 years old'
 	5='65+ years old';
   value race
    .n = 'Not available'
@@ -91,7 +91,7 @@ run;
 		county2_char = put(county2, 5.);
 
 		/*inflation adjustment*/
-		%dollar_convert( hhincome, hhincome_a, &year., 2016, series=CUUR0000SA0 )
+		%dollar_convert( hhincome, hhincome_a, &year., 2017, series=CUUR0000SA0 )
 
 		if hispan=0 then do;
 
@@ -264,6 +264,8 @@ proc stdize data=distribution out=distribution_2 reponly missing=0;
 run;
 
 data distribution_3;
+
+retain agegroup race1 incomecat1 incomecat2 incomecat3 incomecat4 incomecat5 incomecat6 incomecat7 incomecat8 incomecat9 incomecat10;
 set distribution_2;
 	denom= _1+_2+_3 +_4 +_5 +_6 + _7 + _8 +_9 + _10 ;
 	

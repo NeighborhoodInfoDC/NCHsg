@@ -20,16 +20,16 @@
 %DCData_lib( NCHsg)
 %DCData_lib( Ipums)
 
-%let date=09132019;
+%let date=09172019;
 
 proc format;
 
 	value agegroupnew
 	.n= 'Not available'
 	1= 'under 18 years old'
-	2= '18-25 years old'
-	3= '25-45 years old'
-	4= '45-65 years old'
+	2= '18-24 years old'
+	3= '25-44 years old'
+	4= '45-64 years old'
 	5='65+ years old';
   value race
    .n = 'Not available'
@@ -120,7 +120,7 @@ run;
 		run;
 
 		proc sort data=Householddetail_&year.;
-		by county2 agegroup race1 relate;
+		by county2_char agegroup race1 relate;
 		run;
 
 %mend householdinfo;
@@ -132,7 +132,7 @@ run;
 %householdinfo(2017);
 
 /*make sure all PUMA got assigned a geography for tabulation*/
-proc freq data= Household_2013 (where=(county2_char=""));
+proc freq data= Household_2013_3 (where=(county2_char=""));
 tables upuma;
 run;
 
