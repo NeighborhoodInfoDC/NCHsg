@@ -45,9 +45,9 @@
 	when ("37035") 
       county2 =37035;  
 	when ("37097") 
-      county2 =37097;  
+      county2 =1900;  
 	when ("37025") 
-      county2 =37025;  
+      county2 =3300;  
 	when ("37159") 
       county2 =37159;  
 	when ("37057") 
@@ -63,15 +63,15 @@
 	when ("37049") 
       county2 =37049;  
 	when ("37133") 
-      county2 =37133;  
+      county2 =4100;  
 	when ("37129") 
-      county2 =37129;  
+      county2 =4600;  
 	when ("37019") 
       county2 =37019;  
 	when ("37155") 
-      county2 =37155;  
+      county2 =4900;  
 	when ("37179") 
-      county2 =37179;  
+      county2 =5300;  
 
     otherwise
         ;

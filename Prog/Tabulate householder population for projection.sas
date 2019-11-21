@@ -84,9 +84,18 @@ run;
 	data  Household_&year._3 ;
 		set Household_&year._2 ;
 
-		%assign_NCcounty2;   /* assign geography for counties that contain PUMAs  26 total*/
-		%assign_NCcounty3;   /* assign geography for PUMAs that contain multiple counties  28 total*/
+		%assign_NCcounty2;  
+		%assign_NCcounty3;  
 		county2_char = put(county2, 5.);
+		county3_char= county2_char;
+
+  	select ( county3_char );
+  /*8 counties that contain multiple PUMAs*/
+      when ("0500" or "0600") 
+      county2_char = "0500 or 0600";
+    otherwise
+        ;
+  end;
 	run;
 
 	data Householddetail_&year.;
