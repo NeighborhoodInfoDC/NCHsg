@@ -89,13 +89,8 @@ run;
 		county2_char = put(county2, 5.);
 		county3_char= county2_char;
 
-  	select ( county3_char );
-  /*8 counties that contain multiple PUMAs*/
-      when ("0500" or "0600") 
-      county2_char = "0500 or 0600";
-    otherwise
-        ;
-  end;
+     if county3_char= "500" then county3_char = "0500 or 0600";
+     if county3_char= "600" then county3_char = "0500 or 0600";
 	run;
 
 	data Householddetail_&year.;
