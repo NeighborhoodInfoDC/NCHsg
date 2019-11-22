@@ -20,7 +20,7 @@
 %DCData_lib( NCHsg)
 %DCData_lib( Ipums)
 
-%let date=09172019; 
+%let date=11212019;
 
 proc format;
 
@@ -86,9 +86,9 @@ run;
 		keep race hispan age hhincome hhincome_a pernum relate gq upuma county_char county2 county2_char hhwt perwt year serial numprec race1 agegroup totpop_&year. afact AFACT2;
         
 		/*assign the summary unit-- county if larger than PUMA, PUMA if containing more than 1 county*/
-		%assign_NCcounty2;  /* assign geography for counties that contain PUMAs  26 total*/
-		%assign_NCcounty3;  /* assign geography for PUMAs that contain multiple counties  28 total*/
-		county2_char = put(county2, 5.);
+		%assign_NCcounty2;  
+		%assign_NCcounty3;  
+		county2_char = county2;
 
 		/*inflation adjustment*/
 		%dollar_convert( hhincome, hhincome_a, &year., 2017, series=CUUR0000SA0 )
@@ -227,7 +227,7 @@ proc sort data= NCdistribution_3;
 by county2_char race1 agegroup;
 run;
 
-/*should have 54 unique county2_char values*/
+/*should have 45 unique county2_char values*/
 PROC FREQ LEVELS data= NCdistribution_3 (keep = county2_char);
 run;
 

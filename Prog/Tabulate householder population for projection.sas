@@ -20,7 +20,7 @@
 %DCData_lib( NCHsg)
 %DCData_lib( Ipums)
 
-%let date=09172019;
+%let date=11212019;
 
 proc format;
 
@@ -86,11 +86,8 @@ run;
 
 		%assign_NCcounty2;  
 		%assign_NCcounty3;  
-		county2_char = put(county2, 5.);
-		county3_char= county2_char;
-
-     if county3_char= "500" then county3_char = "0500 or 0600";
-     if county3_char= "600" then county3_char = "0500 or 0600";
+		county2_char = put(county2,12.);
+	 
 	run;
 
 	data Householddetail_&year.;
@@ -218,7 +215,7 @@ proc sort data= NCdistribution_3;
 	by county2_char race1 agegroup;
 run;
 
-/*should have 54 unique county2_char values*/
+/*should have 45 unique county2_char values*/
 PROC FREQ LEVELS data= NCdistribution_3 (keep = county2_char);
 run;
 
