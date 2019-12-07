@@ -434,7 +434,7 @@ data Housing_needs_baseline_&year._3;
 			if 3200 <=max_ocost<4200 then mownlevel=5;
 			if max_ocost >= 4200 then mownlevel=6;
 
-
+         * Leah: this is what differs from the other program
 		 *owner cost categories now used in targets that provide a set of categories useable for renters and owners combined; 
 			allcostlevel=.;
 			if owncost_a<800 then allcostlevel=1;
