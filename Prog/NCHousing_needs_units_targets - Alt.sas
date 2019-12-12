@@ -114,7 +114,7 @@ proc format;
 	  6= "More than $3,500"
   ;
 	
-  /*format collapses 80-100% and 100-120% of AMI*/
+
   value inc_cat
 
     1 = '20 percentile'
@@ -471,11 +471,11 @@ data Housing_needs_baseline_&year._3;
   end;
 
   *add structure of housing variable;
-  if UNITSSTR =00 then structure=5
-if UNITSSTR in (01, 02) then structure=4;
-if UNITSSTR in (03, 04) then structure=1;
-if UNITSSTR in (05, 06, 07) then structure=2;
-if UNITSSTR in (08, 09, 10) then structure=3;
+    if UNITSSTR =00 then structure=5
+	if UNITSSTR in (01, 02) then structure=4;
+	if UNITSSTR in (03, 04) then structure=1;
+	if UNITSSTR in (05, 06, 07) then structure=2;
+	if UNITSSTR in (08, 09, 10) then structure=3;
 
   		*costburden and couldpaymore do not overlap. create a category that measures who needs to pay less, 
 		who pays the right amount, and who could pay more;

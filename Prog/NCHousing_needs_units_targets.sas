@@ -106,7 +106,6 @@ proc format;
 	  6= "More than $3,500"
   ;
 	
-  /*format collapses 80-100% and 100-120% of AMI*/
   value inc_cat
 
     1 = '20 percentile'
