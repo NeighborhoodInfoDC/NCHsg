@@ -117,17 +117,20 @@ proc format;
   /*format collapses 80-100% and 100-120% of AMI*/
   value inc_cat
 
-    1 = '10 percentile'
-    2 = '20 percentile'
-    3 = '30 percentile'
-    4 = '40 percentile'
-	5 = '50 percentile'
-    6 = '60 percentile'
-    7 = '70 percentile'
-	8 = '80 percentile'
-	9 = '90 percentile'
-	10= '100 percentile'
-    11= 'vacant'
+    1 = '20 percentile'
+    2 = '40 percentile'
+    3 = '60 percentile'
+	4 = '80 percentile'
+	5= '100 percentile'
+    6= 'vacant'
+	;
+
+	value structure
+	1= 'Single family attached and detached'
+	2= '2-9 units in strucutre'
+	3= '10+ units in strucutre'
+	4= 'Mobile or other'
+	5= 'NA'
 	;
   	  
 run;
@@ -201,7 +204,7 @@ run;
 data Housing_needs_baseline_&year.;
 
   set NCarea_&year.
-        (keep=year serial pernum hhwt hhincome numprec bedrooms gq ownershp owncost ownershpd rentgrs valueh county2_char
+        (keep=year serial pernum hhwt hhincome numprec UNITSSTR bedrooms gq ownershp owncost ownershpd rentgrs valueh county2_char
          where=(pernum=1 and gq in (1,2) and ownershpd in ( 12,13,21,22 )));
 
 	 *adjust all incomes to 2017 $ to match use of 2017 family of 4 income limit in projections (originally based on use of most recent 5-year IPUMS; 
@@ -212,7 +215,7 @@ data Housing_needs_baseline_&year.;
 
 	*create HUD_inc - uses 2016 limits but has categories for 120-200% and 200%+ AMI; 
 
-		%Hud_inc_RegHsg( hhinc=hhincome_a, hhsize=numprec )  /*need to discuss for NC, use this macro for now*/
+		%Hud_inc_NCState( hhinc=hhincome_a, hhsize=numprec )  /*use this statewide macro for now*/
 run; 
 
 proc univariate data= Housing_needs_baseline_&year.;
@@ -239,16 +242,11 @@ data Housing_needs_baseline_&year._3;
 		if hhincome_a in ( 9999999, .n , . ) then inc=.;
 			else do; 
  /*assign income category based on each year's HH income quintile*/
-		if hhincome_a < P_10 then inc=1;
-		if P_10  =< hhincome_a < P_20 then inc=2;
-		if P_20  =< hhincome_a < P_30 then inc=3;
-		if P_30  =< hhincome_a < P_40 then inc=4;
-		if P_40  =< hhincome_a < P_50 then inc=5;
-		if P_50  =< hhincome_a < P_60 then inc=6;
-		if P_60  =< hhincome_a < P_70 then inc=7;
-		if P_70  =< hhincome_a < P_80 then inc=8;
-		if P_80  =< hhincome_a < P_90 then inc=9;
-		if P_90  =< hhincome_a =< P_100 then inc=10;
+		if hhincome_a < P_20 then inc=1;
+		if P_20  =< hhincome_a < P_40 then inc=2;
+		if P_40  =< hhincome_a < P_60 then inc=3;
+		if P_60  =< hhincome_a < P_80 then inc=4;
+		if P_80  =< hhincome_a < P_100 then inc=5;
   end;
 
 		  label /*hud_inc = 'HUD Income Limits category for household (2016)'*/
@@ -472,7 +470,13 @@ data Housing_needs_baseline_&year._3;
 			end; 
   end;
 
-	
+  *add structure of housing variable;
+  if UNITSSTR =00 then structure=5
+if UNITSSTR in (01, 02) then structure=4;
+if UNITSSTR in (03, 04) then structure=1;
+if UNITSSTR in (05, 06, 07) then structure=2;
+if UNITSSTR in (08, 09, 10) then structure=3;
+
   		*costburden and couldpaymore do not overlap. create a category that measures who needs to pay less, 
 		who pays the right amount, and who could pay more;
 		paycategory=.;
@@ -491,10 +495,10 @@ data Housing_needs_baseline_&year._3;
 				  mownlevel = 'Owner Cost Categories based on Max affordable-desired First-Time HomeBuyer Costs'
 				  couldpaymore = "Occupant Could Afford to Pay More - Costs+10% are > Max affordable cost"
 				  paycategory = "Whether Occupant pays too much, the right amount or too little" 
-
+                  structure = 'Housing structure type'
 				;
 	
-format mownlevel ownlevel ocost. rentlevel mrentlevel rcost. allcostlevel mallcostlevel acost. hud_inc hud_inc. inc inc_cat.; 
+format mownlevel ownlevel ocost. rentlevel mrentlevel rcost. allcostlevel mallcostlevel acost. hud_inc hud_inc. inc inc_cat. structure structure.; 
 run;
 
 data Housing_needs_vacant_&year. Other_vacant_&year. ;
@@ -680,7 +684,7 @@ proc export data=other_vacant
 /*data set for all units that we can determine cost level*/ 
 data all;
 	set fiveyeartotal fiveyeartotal_vacant (in=a);
-	if a then inc=11; 
+	if a then inc=6; 
 format inc inc_cat.;
 run; 
 
