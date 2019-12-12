@@ -484,6 +484,13 @@ data Housing_needs_baseline_&year._3;
 		if costburden=0 and couldpaymore=0 then paycategory=2;
 		if couldpaymore=1 then paycategory=3; 
 
+		if BUILTYR2 in ( 00, 9999999, .n , . ) then structureyear=.;
+		else do; 
+		    if BUILTYR2  in (07, 08, 09, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22) then structureyear=1;
+			else if BUILTYR2  in (04, 05, 06) then structureyear=2;
+            else if BUILTYR2 in (01, 02, 03)  then structureyear=3;
+		end;
+
 	total=1;
 
 
@@ -496,7 +503,9 @@ data Housing_needs_baseline_&year._3;
 				  couldpaymore = "Occupant Could Afford to Pay More - Costs+10% are > Max affordable cost"
 				  paycategory = "Whether Occupant pays too much, the right amount or too little" 
                   structure = 'Housing structure type'
+				  structureyear = 'Age of structure'
 				;
+
 	
 format mownlevel ownlevel ocost. rentlevel mrentlevel rcost. allcostlevel mallcostlevel acost. hud_inc hud_inc. inc inc_cat. structure structure.; 
 run;
@@ -593,11 +602,27 @@ data Housing_needs_vacant_&year. Other_vacant_&year. ;
 
 	  paycategory=4; *add vacant as a category to paycategory; 
 
+		if BUILTYR2 in ( 00, 9999999, .n , . ) then structureyear=.;
+		else do; 
+		    if BUILTYR2  in (07, 08, 09, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22) then structureyear=1;
+			else if BUILTYR2  in (04, 05, 06) then structureyear=2;
+            else if BUILTYR2 in (01, 02, 03)  then structureyear=3;
+		end;
+
+		
+  *add structure of housing variable;
+    if UNITSSTR =00 then structure=5
+	if UNITSSTR in (01, 02) then structure=4;
+	if UNITSSTR in (03, 04) then structure=1;
+	if UNITSSTR in (05, 06, 07) then structure=2;
+	if UNITSSTR in (08, 09, 10) then structure=3;
 
 		label rentlevel = 'Rent Level Categories based on Current Gross Rent'
 		 		  allcostlevel='Housing Cost Categories (tenure combined) based on Current Rent or First-time Buyer Mtg'
 				  ownlevel = 'Owner Cost Categories based on First-Time HomeBuyer Costs'
 				  paycategory = "Whether Occupant pays too much, the right amount or too little" 
+				  structureyear = 'Age of structure'
+				  structure = 'Housing structure type'
 				;
 	format ownlevel ocost. rentlevel rcost. vacancy_r VACANCY_F. allcostlevel acost. ; 
 
