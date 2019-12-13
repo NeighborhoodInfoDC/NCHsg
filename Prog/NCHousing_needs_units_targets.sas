@@ -122,7 +122,11 @@ proc format;
 	4= 'Mobile or other'
 	5= 'NA'
 	;
-  	  
+  	
+  value afford
+
+  1= 'natural affordable (rent < $750)'
+  0= 'not natural affordable'; 
 run;
 
 data crosswalk;
@@ -457,6 +461,16 @@ if UNITSSTR in (08, 09, 10) then structure=3;
             else if BUILTYR2 in (01, 02, 03)  then structureyear=3;
 		end;
 
+		
+	if rentgrs in ( 9999999, .n , . ) then affordable=.;
+		else do; 
+		    if rentgrs_a<750 then affordable=1;
+			else if rentgrs_a>=750 then affordable=0;
+			
+		end;
+
+	  label affordable = 'Natural affordable rental unit';
+
  	total=1;
 
 			label rentlevel = 'Rent Level Categories based on Current Gross Rent'
@@ -495,6 +509,14 @@ data Housing_needs_vacant_&year. Other_vacant_&year. ;
 
 			  %dollar_convert( rentgrs, rentgrs_a, &year., 2017, series=CUUR0000SA0L2 )
 			
+			  	if rent in ( 9999999, .n , . ) then affordable_vacant=.;
+		else do; 
+		    if rentgrs_a<750 then affordable_vacant=1;
+			else if rentgrs_a>=750 then affordable_vacant=0;
+
+		end;
+
+	  label affordable_vacant = 'Natural affordable vacant rental unit';
 
 		/*create rent level categories*/ 
 			/*need to discuss for NC*/
