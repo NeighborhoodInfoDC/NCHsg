@@ -674,6 +674,11 @@ data fiveyeartotal;
 hhwt_5=hhwt*.2; 
 run; 
 
+/*export dataset*/
+ data NCHsg.fiveyeartotal; 
+   set fiveyeartotal;
+ run;
+
 proc tabulate data=fiveyeartotal format=comma12. noseps missing;
   class county2_char;
   var hhwt_5;
@@ -689,6 +694,12 @@ data fiveyeartotal_vacant;
 
 hhwt_5=hhwt*.2;
 run;
+
+/*export dataset*/
+ data NCHsg.fiveyeartotal_vacant; 
+   set fiveyeartotal_vacant;
+ run;
+
 proc tabulate data=fiveyeartotal_vacant format=comma12. noseps missing;
   class county2_char;
   var hhwt_5;
@@ -706,6 +717,12 @@ data fiveyeartotal_othervacant;
 hhwt_5=hhwt*.2;
 
 run;
+
+/*export dataset*/
+ data NCHsg.fiveyeartotal_othervacant; 
+   set fiveyeartotal_othervacant;
+ run;
+
 proc tabulate data=fiveyeartotal_othervacant format=comma12. noseps missing;
   class county2_char;
   var hhwt_5;
