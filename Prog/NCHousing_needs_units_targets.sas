@@ -47,7 +47,7 @@
 %DCData_lib( NCHsg )
 %DCData_lib( Ipums )
 
-%let date=12072019; 
+%let date=12312019; 
 
 proc format;
 
@@ -199,7 +199,7 @@ run;
 data Housing_needs_baseline_&year.;
 
   set NCarea_&year.
-        (keep=year serial pernum hhwt hhincome numprec UNITSSTR bedrooms gq ownershp owncost ownershpd rentgrs valueh county2_char
+        (keep=year serial pernum hhwt hhincome numprec UNITSSTR BUILTYR2 bedrooms gq ownershp owncost ownershpd rentgrs valueh county2_char
          where=(pernum=1 and gq in (1,2) and ownershpd in ( 12,13,21,22 )));
 
 	 *adjust all incomes to 2017 $ to match use of 2017 family of 4 income limit in projections (originally based on use of most recent 5-year IPUMS; 
@@ -210,42 +210,12 @@ data Housing_needs_baseline_&year.;
 
 	*create HUD_inc - uses 2016 limits but has categories for 120-200% and 200%+ AMI; 
 
-		%Hud_inc_NCState( hhinc=hhincome_a, hhsize=numprec )  /* use this Statewide macro for now*/
+  %Hud_inc_NCState( hhinc=hhincome_a, hhsize=numprec )  /* use this Statewide macro for now*/
+
 run; 
 
-proc univariate data= Housing_needs_baseline_&year.;
-	var  hhincome_a;
-	weight hhwt;
-	output out= inc_&year. pctlpre= P_ pctlpts= 10 to 100 by 10 ;
-run;  /*by nature of this function, the output dataset is named data1, data2, data3...*/
-
-data inc_&year._2;
-set inc_&year.;
-year= &year.;
-run;
-
-data Housing_needs_baseline_&year._2;
-	merge Housing_needs_baseline_&year.(in=a) inc_&year._2;
-	if a;
-	by year ;
-run;
-
 data Housing_needs_baseline_&year._3;
-  set Housing_needs_baseline_&year._2;
-
-	/*to match categories used in projections which do not account for household size*/
-		if hhincome_a in ( 9999999, .n , . ) then inc=.;
-			else do; 
- /*assign income category based on each year's HH income quintile*/
-		if hhincome_a < P_20 then inc=1;
-		if P_20  =< hhincome_a < P_40 then inc=2;
-		if P_40  =< hhincome_a < P_60 then inc=3;
-		if P_60  =< hhincome_a < P_80 then inc=4;
-		if P_80  =< hhincome_a < P_100 then inc=5;
-  end;
-
-		  label /*hud_inc = 'HUD Income Limits category for household (2016)'*/
-			    inc='Income quintiles statewide not account for HH size';
+  set Housing_needs_baseline_&year.;
 
 	 *adjust housing costs for inflation; 
 
@@ -448,7 +418,7 @@ data Housing_needs_baseline_&year._3;
   end;
 
   *add structure of housing variable;
-  if UNITSSTR = 00 then structure=5
+  if UNITSSTR = 00 then structure=5;
 if UNITSSTR in (01, 02) then structure=4;
 if UNITSSTR in (03, 04) then structure=1;
 if UNITSSTR in (05, 06, 07) then structure=2;
@@ -484,12 +454,12 @@ if UNITSSTR in (08, 09, 10) then structure=3;
 
 				;
 	
-format mownlevel ownlevel ocost. rentlevel mrentlevel rcost. allcostlevel mallcostlevel acost. hud_inc hud_inc. inc inc_cat. structure structure.; 
+format mownlevel ownlevel ocost. rentlevel mrentlevel rcost. allcostlevel mallcostlevel acost. hud_inc hud_inc. structure structure.; 
 run;
 
 data Housing_needs_vacant_&year. Other_vacant_&year. ;
 
-  set NCvacant_&year.(keep=year serial hhwt bedrooms gq vacancy rent valueh county2_char );
+  set NCvacant_&year.(keep=year serial hhwt bedrooms gq vacancy rent valueh county2_char UNITSSTR BUILTYR2);
 
   	if _n_ = 1 then set Ratio_&year.;
 
@@ -595,7 +565,7 @@ data Housing_needs_vacant_&year. Other_vacant_&year. ;
 		end;
 		
   *add structure of housing variable;
-    if UNITSSTR =00 then structure=5
+    if UNITSSTR =00 then structure=5;
 	if UNITSSTR in (01, 02) then structure=4;
 	if UNITSSTR in (03, 04) then structure=1;
 	if UNITSSTR in (05, 06, 07) then structure=2;
@@ -612,7 +582,7 @@ data Housing_needs_vacant_&year. Other_vacant_&year. ;
 
 	*output other vacant - seasonal separately ;
 	if vacancy in (1, 2, 3) then output Housing_needs_vacant_&year.;
-	else if vacancy in (4, 7, 9) then output other_vacant_&year.; 
+	else if vacancy in (4, 7, 9) then output Other_vacant_&year.; 
 	run;
 
 %mend single_year; 
@@ -628,13 +598,47 @@ data Housing_needs_vacant_&year. Other_vacant_&year. ;
 revised to match Steven's files in https://urbanorg.app.box.com/file/402454379812 (after changing 2 HH = GQ=5 in 2013
  to non head of HH)
 */
+data fiveyeartotal1;
+set Housing_needs_baseline_2013_3 Housing_needs_baseline_2014_3 Housing_needs_baseline_2015_3 Housing_needs_baseline_2016_3 Housing_needs_baseline_2017_3;
+totalpop=0.2;
+merge=1;
+totpop_wt= totalpop*AFACT2; 
+run;
 
+proc univariate data= fiveyeartotal1;
+	var  hhincome_a;
+	weight hhwt;
+	output out= inc_pooled pctlpre= P_ pctlpts= 10 to 100 by 10 ;
+run;  /*by nature of this function, the output dataset is named data1, data2, data3...*/
+
+data inc_pooled2;
+set inc_pooled;
+merge= 1;
+run;
+
+data fiveyeartotal2;
+	merge fiveyeartotal1(in=a) inc_pooled2;
+	if a;
+	by merge ;
+run;
 
 data fiveyeartotal;
-	set Housing_needs_baseline_2013_3 Housing_needs_baseline_2014_3 Housing_needs_baseline_2015_3 Housing_needs_baseline_2016_3 Housing_needs_baseline_2017_3;
-
+set fiveyeartotal2;
+if hhincome_a in ( 9999999, .n ) then inc = .n;
+  else do;
+ /*assign income category based on each year's HH income quintile*/
+		if hhincome_a < P_20 then inc=1;
+		if P_20  =< hhincome_a < P_40 then inc=2;
+		if P_40  =< hhincome_a < P_60 then inc=3;
+		if P_60  =< hhincome_a < P_80 then inc=4;
+		if P_80  =< hhincome_a < P_100 then inc=5;
+  end;
+	    label /*hud_inc = 'HUD Income Limits category for household (2016)'*/
+	    inc='Income quintiles statewide not account for HH size';
+		format inc inc_cat.;
 hhwt_5=hhwt*.2; 
-run; 
+run;
+
 /*export dataset*/
  data NCHsg.fiveyeartotal; 
    set fiveyeartotal;
@@ -698,7 +702,7 @@ tables vacancy /nopercent norow nocol out=other_vacant;
 weight hhwt_5;
 *format county2_char county2_char.;
 run; 
-proc export data=other_vacant
+proc export data=fiveyeartotal_othervacant
  	outfile="&_dcdata_default_path\NCHsg\Prog\other_vacant_&date..csv"
    dbms=csv
    replace;
