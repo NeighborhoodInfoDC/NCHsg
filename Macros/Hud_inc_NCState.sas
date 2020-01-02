@@ -38,7 +38,7 @@
           else if ELI_1 < hhincome <= l50_1 then hud_inc = 2;
           else if l50_1 < hhincome <= l80_1 then hud_inc = 3;
           else if l80_1 < hhincome <= l50_1*2.4 then hud_inc = 4;
-          else if 49680 < hhincome then hud_inc = 5;
+          else if l50_1*2.4 < hhincome then hud_inc = 5;
         end;
       when ( 2 )
         do;
