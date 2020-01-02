@@ -141,6 +141,14 @@ proc sort data= crosswalk;
 	by upuma;
 run;
 
+data NC17_limits;
+	set NCHsg.NC17_limits;
+run;
+
+proc sort data= NC17_limits;
+	by MID;
+run;
+
 %macro single_year(year);
 
 	data NCvacant_&year._1 ;
@@ -196,21 +204,43 @@ run;
 		  output out=Ratio_&year (keep=Ratio_rentgrs_rent_&year.) mean=;
 		run;
 
-data Housing_needs_baseline_&year.;
+
+
+
+data Housing_needs_baseline_&year._1;
 
   set NCarea_&year.
-        (keep=year serial pernum hhwt hhincome numprec UNITSSTR BUILTYR2 bedrooms gq ownershp owncost ownershpd rentgrs valueh county2_char
+        (keep=year serial pernum MET2013 hhwt hhincome numprec UNITSSTR BUILTYR2 bedrooms gq ownershp owncost ownershpd rentgrs valueh county2_char
          where=(pernum=1 and gq in (1,2) and ownershpd in ( 12,13,21,22 )));
 
-	 *adjust all incomes to 2017 $ to match use of 2017 family of 4 income limit in projections (originally based on use of most recent 5-year IPUMS; 
+		 *adjust all incomes to 2017 $ to match use of 2017 family of 4 income limit in projections (originally based on use of most recent 5-year IPUMS; 
+	MID= put(MET2013, 5.);
 
+	if MET2013= 0 then do;
+	MID="99999";
+	end;
+
+run;
+
+proc sort data= Housing_needs_baseline_&year._1;
+by MID;
+run;
+
+data Housing_needs_baseline_&year._2;
+merge Housing_needs_baseline_&year._1(in=a) NC17_limits;
+if a;
+by MID;
+run;
+
+data Housing_needs_baseline_&year.;
+set Housing_needs_baseline_&year._2;
 	  if hhincome ~=.n or hhincome ~=9999999 then do; 
 		 %dollar_convert( hhincome, hhincome_a, &year., 2017, series=CUUR0000SA0 )
 	   end; 
 
-	*create HUD_inc - uses 2016 limits but has categories for 120-200% and 200%+ AMI; 
+	*create HUD_inc - uses 2017 limits but has categories for 120-200% and 200%+ AMI; 
 
-  %Hud_inc_NCState( hhinc=hhincome_a, hhsize=numprec )  /* use this Statewide macro for now*/
+  %Hud_inc_NCState( hhinc=hhincome_a, hhsize=numprec )  
 
 run; 
 
@@ -326,8 +356,6 @@ data Housing_needs_baseline_&year._3;
 				if rentgrs_a >= 3500 then mallcostlevel=6;
 
 			end; 
-
-
 
 
 	end;
