@@ -201,7 +201,7 @@ run;
 data Housing_needs_baseline_&year.;
 
   set NCarea_&year.
-        (keep=year serial pernum hhwt hhincome numprec UNITSSTR BUILTYR2 bedrooms gq ownershp owncost ownershpd rentgrs valueh county2_char
+        (keep=year serial pernum hhwt hhincome numprec UNITSSTR BUILTYR2 bedrooms gq ownershp owncost ownershpd rentgrs valueh county2_char afact afact2
          where=(pernum=1 and gq in (1,2) and ownershpd in ( 12,13,21,22 )));
 
 	 *adjust all incomes to 2017 $ to match use of 2017 family of 4 income limit in projections (originally based on use of most recent 5-year IPUMS; 
