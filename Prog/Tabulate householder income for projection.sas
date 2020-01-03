@@ -20,7 +20,7 @@
 %DCData_lib( NCHsg)
 %DCData_lib( Ipums)
 
-%let date=12162019;
+%let date=01032020;
 
 proc format;
 
@@ -232,7 +232,7 @@ run;
 
 proc summary data=fiveyeartotal;
 class county2_char agegroup race1 inc;
-	var totpop;
+	var totalpop;
 	weight hhwt;
 	output out = Householderbreakdown_NC(where=(_TYPE_=15)) sum=;
 	format race1 racenew. agegroup agegroupnew. ;
@@ -245,7 +245,7 @@ run;
 proc transpose data=Householderbreakdown_NC out=NCdistribution;
 by county2_char agegroup race1 ;
 id inc;
-var totpop;
+var totalpop;
 run;
 proc stdize data=NCdistribution out=NCdistribution_2 reponly missing=0;
    var _1 _2 _3 _4 _5 _6 _7 _8 _9 _10;
@@ -286,7 +286,7 @@ run;
 
 proc summary data=fiveyeartotal;
 class agegroup race1 inc;
-	var totpop;
+	var totalpop;
 	weight hhwt;
 	output out = Householderbreakdown (where=(_TYPE_=7)) sum=;
 	format race1 racenew. agegroup agegroupnew. ;
@@ -299,7 +299,7 @@ run;
 proc transpose data=Householderbreakdown out=distribution;
 by agegroup race1;
 id inc;
-var totpop;
+var totalpop;
 run;
 proc stdize data=distribution out=distribution_2 reponly missing=0;
    var _1 _2 _3 _4 _5 _6 _7 _8 _9 _10;
