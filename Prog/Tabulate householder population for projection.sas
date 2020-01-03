@@ -12,6 +12,8 @@
 
 
  Modifications: 8/16/19 based on Steven's new race and place categories
+                1/3/20 YS removed afact weights in population 
+tabulation
 **************************************************************************/
 
 %include "L:\SAS\Inc\StdLocal.sas";
@@ -141,7 +143,7 @@ run;
 data fiveyeartotal;
 set Householddetail_2013 Householddetail_2014 Householddetail_2015 Householddetail_2016 Householddetail_2017;
 totalpop=0.2;
-totpop_wt= totalpop*AFACT2; 
+*totpop_wt= totalpop*AFACT2;  /*removed afact weights from tabulation*/
 run;
 
 /*total NC*/
@@ -151,7 +153,7 @@ run;
 
 proc summary data=fiveyeartotal;
 class agegroup race1 relate;
-	var totpop_wt;
+	var totpop;
 	weight perwt;
 	output out = Householdbreakdown(where=(_TYPE_=7)) sum=;
 	format race1 racenew. agegroup agegroupnew.;
@@ -165,7 +167,7 @@ run;
 proc transpose data=Householdbreakdown out=distribution;
 	by agegroup race1;
 	id relate;
-	var totpop_wt;
+	var totpop;
 run;
 proc stdize data=distribution out=distribution_2 reponly missing=0;
    var grandchild parent Parent_in_Law Child_in_law Sibling_in_law Spouse;
@@ -189,7 +191,7 @@ proc sort data=fiveyeartotal;
 run;
 proc summary data=fiveyeartotal;
 class county2_char agegroup race1 relate;
-	var totpop_wt;
+	var totpop;
 	weight perwt;
 	output out = Householdbreakdown_NC(where=(_TYPE_=15)) sum=;
 	format race1 racenew. agegroup agegroupnew. ;
@@ -201,7 +203,7 @@ run;
 proc transpose data=Householdbreakdown_NC out=NCdistribution;
 	by agegroup race1 county2_char;
 	id relate;
-	var totpop_wt;
+	var totpop;
 run;
 proc stdize data=NCdistribution out=NCdistribution_2 reponly missing=0;
    var Head_Householder Spouse Child Child_in_law  Sibling Sibling_in_Law Grandchild Other_relatives Partner__friend__visitor Other_non_relatives Institutional_inmates Parent Parent_in_Law;

@@ -11,7 +11,7 @@
  ACS IPUMS data for NC:
 
  Modifications: 8/16/19 based on Steven's new race and place categories
-
+                1/3/20 YS removed afact weights
 **************************************************************************/
 
 %include "L:\SAS\Inc\StdLocal.sas";
@@ -164,7 +164,7 @@ data fiveyeartotal1;
 set Householddetail_2013  Householddetail_2014 Householddetail_2015 Householddetail_2016 Householddetail_2017;
 totalpop=0.2;
 merge=1;
-totpop_wt= totalpop*AFACT2; 
+*totpop_wt= totalpop*AFACT2; /*remove afact weights*/
 run;
 
 proc univariate data= fiveyeartotal1;
@@ -202,7 +202,7 @@ if hhincome_a in ( 9999999, .n ) then inc = .n;
   end;
 run;
 
-/*compile 13-17 data for tabulation */
+/*compile 13-17 data for tabulation, this part is now moved after five years of data is compiled to calculate the pooled income quintile*/
 /*data fiveyeartotal;
 set Householddetail_2013_inc  Householddetail_2014_inc Householddetail_2015_inc Householddetail_2016_inc Householddetail_2017_inc;
 totalpop=0.2;
@@ -232,7 +232,7 @@ run;
 
 proc summary data=fiveyeartotal;
 class county2_char agegroup race1 inc;
-	var totpop_wt;
+	var totpop;
 	weight hhwt;
 	output out = Householderbreakdown_NC(where=(_TYPE_=15)) sum=;
 	format race1 racenew. agegroup agegroupnew. ;
@@ -245,7 +245,7 @@ run;
 proc transpose data=Householderbreakdown_NC out=NCdistribution;
 by county2_char agegroup race1 ;
 id inc;
-var totpop_wt;
+var totpop;
 run;
 proc stdize data=NCdistribution out=NCdistribution_2 reponly missing=0;
    var _1 _2 _3 _4 _5 _6 _7 _8 _9 _10;
@@ -286,7 +286,7 @@ run;
 
 proc summary data=fiveyeartotal;
 class agegroup race1 inc;
-	var totpop_wt;
+	var totpop;
 	weight hhwt;
 	output out = Householderbreakdown (where=(_TYPE_=7)) sum=;
 	format race1 racenew. agegroup agegroupnew. ;
@@ -299,7 +299,7 @@ run;
 proc transpose data=Householderbreakdown out=distribution;
 by agegroup race1;
 id inc;
-var totpop_wt;
+var totpop;
 run;
 proc stdize data=distribution out=distribution_2 reponly missing=0;
    var _1 _2 _3 _4 _5 _6 _7 _8 _9 _10;
