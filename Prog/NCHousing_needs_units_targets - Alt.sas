@@ -54,24 +54,6 @@ proc format;
     6 = 'More than 200%'
 	;
 
-  value tenure
-    1 = 'Renter units'
-    2 = 'Owner units'
-	;
-/*
-  value county2_char
-    1= "DC"
-	2= "Charles County"
-	3= "Frederick County "
-	4="Montgomery County"
-	5="Prince Georges "
-	6="Arlington"
-	7="Fairfax, Fairfax city and Falls Church"
-	8="Loudoun"
-	9="Prince William, Manassas and Manassas Park"
-    10="Alexandria"
-  	;
-*/
   value rcost
 	  1= "$0 to $749"
 	  2= "$750 to $1,199"
@@ -134,13 +116,8 @@ run;
 	proc sort data= crosswalk;
 	by upuma;
 	run;
-
-data NC17_limits;
-	set NCHsg.NC17_limits;
-run;
-
-proc sort data= NC17_limits;
-	by MID;
+proc sort data=NCHsg.NC17_limits out=NC17_limits;
+by MID;
 run;
 
 %macro single_year(year);
@@ -165,11 +142,7 @@ run;
 	run;
 
 
-	data NCarea_&year._1 ;
-	set Ipums.Acs_&year._NC ;
-	run;
-
-	proc sort data= NCarea_&year._1;
+	proc sort data=Ipums.Acs_&year._NC out=NCarea_&year._1;
 	by upuma;
 	run;
 
@@ -258,10 +231,10 @@ data Housing_needs_baseline_&year._3;
 	 *create maximum desired or affordable rent based on HUD_Inc categories*; 
     /* need to discuss for NC, use hudinc for now*/
 	  if hud_inc in(1 2 3) then max_rent=HHINCOME_a/12*.3; *under 80% of AMI then pay 30% threshold; 
-	  if hud_inc =4 then max_rent=HHINCOME_a/12*.25; *avg for all HH hud_inc=4; 
-	  if costratio <=.18 and hud_inc = 5 then max_rent=HHINCOME_a/12*.18; *avg for all HH hud_inc=5; 	
+	  if hud_inc =4 then max_rent=HHINCOME_a/12*.2; *avg for all HH hud_inc=4 in NC; 
+	  if costratio <=.16 and hud_inc = 5 then max_rent=HHINCOME_a/12*.16; *avg for all HH hud_inc=5 in NC; 	
 		else if hud_inc = 5 then max_rent=HHINCOME_a/12*costratio; *allow 120-200% above average to spend more; 
-	  if costratio <=.12 and hud_inc = 6 then max_rent=HHINCOME_a/12*.12; *avg for all HH hud_inc=6; 
+	  if costratio <=.15 and hud_inc = 6 then max_rent=HHINCOME_a/12*.15; *avg for all HH hud_inc=6 in NC; 
 	  	else if hud_inc=6 then max_rent=HHINCOME_a/12*costratio; *allow 200%+ above average to spend more; 
      
 	 *create flag for household could "afford" to pay more; 
@@ -346,10 +319,10 @@ data Housing_needs_baseline_&year._3;
 
 		/*need to discuss for NC*/
 		if hud_inc in(1 2 3) then max_ocost=HHINCOME_a/12*.3; *under 80% of AMI then pay 30% threshold; 
-		if hud_inc =4 then max_ocost=HHINCOME_a/12*.25; *avg for all HH hud_inc=4;
-		if costratio <=.18 and hud_inc = 5 then max_ocost=HHINCOME_a/12*.18; *avg for all HH HUD_inc=5; 
+		if hud_inc =4 then max_ocost=HHINCOME_a/12*.20; *avg for all HH hud_inc=4 in NC; 
+		if costratio <=.16 and hud_inc = 5 then max_ocost=HHINCOME_a/12*.16; *avg for all HH HUD_inc=5 in NC;  
 			else if hud_inc = 5 then max_ocost=HHINCOME_a/12*costratio; *allow 120-200% above average to pay more; 
-		if costratio <=.12 and hud_inc=6 then max_ocost=HHINCOME_a/12*.12; *avg for all HH HUD_inc=6;
+		if costratio <=.15 and hud_inc=6 then max_ocost=HHINCOME_a/12*.15; *avg for all HH HUD_inc=6 in NC; 
 			else if hud_inc = 6 then max_ocost=HHINCOME_a/12*costratio; *allow 120-200% above average to pay more; 
 		
 		*create flag for household could "afford" to pay more; 
@@ -625,20 +598,120 @@ data Housing_needs_vacant_&year. Other_vacant_&year. ;
 
 /*merge single year data and reweight
 
-revised to match Steven's files in https://urbanorg.app.box.com/file/402454379812 (after changing 2 HH = GQ=5 in 2013
- to non head of HH)
+revised to match Steven's files in https://urbanorg.box.com/s/nm4wb0arxsxv8aml98b6y062tudzp2i6
 */
-/*no need for calibration for NC projections */
+data projectedHH;
+set NChsg.projection_for_calibration;
+county2_char= puma;
+run;
+
 data fiveyeartotal1;
 set Housing_needs_baseline_2013_3 Housing_needs_baseline_2014_3 Housing_needs_baseline_2015_3 Housing_needs_baseline_2016_3 Housing_needs_baseline_2017_3;
 totalpop=0.2;
 merge=1;
-totpop_wt= totalpop*AFACT2; 
+*totpop_wt= totalpop*AFACT2; 
+geoid=.;
+if county2_char= "0100" then geoid=1;
+else if  county2_char= "0200" then geoid=2;
+else if  county2_char= "0300" then geoid=3;
+else if  county2_char= "0400" then geoid=4;
+else if  county2_char= "0500 or 0600" then geoid=5;
+else if  county2_char= "0700" then geoid=6;
+else if  county2_char= "0800" then geoid=7;
+else if  county2_char= "0900" then geoid=8;
+else if  county2_char= "1000" then geoid=9;
+else if  county2_char= "1100" then geoid=10;
+else if  county2_char= "1201 to 1208" then geoid=11;
+else if  county2_char= "1301 to 1302" then geoid=12;
+else if  county2_char= "1400" then geoid=13;
+else if  county2_char= "1500" then geoid=14;
+else if  county2_char= "1600" then geoid=15;
+else if  county2_char= "1701 to 1704" then geoid=16;
+else if  county2_char= "1801 to 1803" then geoid=17;
+else if  county2_char= "1900 or 2900" then geoid=18;
+else if  county2_char= "2000" then geoid=19;
+else if  county2_char= "2100" then geoid=20;
+else if  county2_char= "2201 to 2202" then geoid=21;
+else if  county2_char= "2300 or 2400" then geoid=22;
+else if  county2_char= "2500" then geoid=23;
+else if  county2_char= "2600 or 2700" then geoid=24;
+else if  county2_char= "2800" then geoid=25;
+else if  county2_char= "3001 to 3003" then geoid=26;
+else if  county2_char= "3101 to 3108" then geoid=27;
+else if  county2_char= "3200 or 3300" then geoid=28;
+else if  county2_char= "3400" then geoid=29;
+else if  county2_char= "3500" then geoid=30;
+else if  county2_char= "3600" then geoid=31;
+else if  county2_char= "3700" then geoid=32;
+else if  county2_char= "3800" then geoid=33;
+else if  county2_char= "3900" then geoid=34;
+else if  county2_char= "4000" then geoid=35;
+else if  county2_char= "4100 or 4500" then geoid=36;
+else if  county2_char= "4200" then geoid=37;
+else if  county2_char= "4300" then geoid=38;
+else if  county2_char= "4400" then geoid=39;
+else if  county2_char= "4600 or 4700" then geoid=40;
+else if  county2_char= "4800" then geoid=41;
+else if  county2_char= "4900 or 5100" then geoid=42;
+else if  county2_char= "5001 to 5003" then geoid=43;
+else if  county2_char= "5200" then geoid=44;
+else if  county2_char= "5300 or 5400" then geoid=45;
+
 run;
 
-proc univariate data= fiveyeartotal1;
+/*calculate average cost ratio for each hud_inc group that is used for maximum desired or affordable rent/owncost*/
+proc sort data= fiveyeartotal1;
+by hud_inc /*tenure*/;
+run;
+
+proc summary data= fiveyeartotal1;
+by hud_inc tenure;
+var costratio HHincome_a;
+output out= costratio_hudinc mean=;
+run;
+
+proc summary data= fiveyeartotal1;
+by hud_inc tenure;
+var HHincome_a owncost_a rentgrs_a;
+output out= incomecategories mean=;
+run;
+/*calibrate ipums to 2015 population projection*/ 
+proc sort data= fiveyeartotal1;
+by geoid;
+run;
+proc summary data=fiveyeartotal1;
+by geoid;
+var totalpop;
+weight hhwt;
+output out=geo_sum sum=ACS_13_17;
+run; 
+proc sort data= projectedHH;
+by geoid;
+run;
+
+data calculate_calibration;
+merge geo_sum(in=a) projectedHH;
+by geoid;
+if a;
+calibration=(hh2015/ACS_13_17);
+run;
+
+data fiveyeartotal_c;
+merge fiveyeartotal1 calculate_calibration;
+by geoid;
+
+hhwt_geo=.; 
+
+hhwt_geo=hhwt*calibration*0.2; 
+
+label hhwt_geo="Household Weight Calibrated to Steven Estimates for Households"
+	  calibration="Ratio of Steven 2015 estimate to ACS 2013-17 for 45 geographic units";
+
+run; 
+
+proc univariate data= fiveyeartotal_c;
 	var  hhincome_a;
-	weight hhwt;
+	weight hhwt_geo;
 	output out= inc_pooled pctlpre= P_ pctlpts= 10 to 100 by 10 ;
 run;  /*by nature of this function, the output dataset is named data1, data2, data3...*/
 
@@ -648,7 +721,7 @@ merge= 1;
 run;
 
 data fiveyeartotal2;
-	merge fiveyeartotal1(in=a) inc_pooled2;
+	merge fiveyeartotal_c(in=a) inc_pooled2;
 	if a;
 	by merge ;
 run;
@@ -666,76 +739,213 @@ if hhincome_a in ( 9999999, .n ) then inc = .n;
   end;
 	    label /*hud_inc = 'HUD Income Limits category for household (2016)'*/
 	    inc='Income quintiles statewide not account for HH size';
-		format inc inc_cat.;
-hhwt_5=hhwt*.2; 
+		format inc inc_cat.; 
+		hhwt_ori= hhwt*0.2;
 run;
 
 /*export dataset*/
- data NCHsg.fiveyeartotal_alt; 
+ data NCHsg.fiveyeartotal_alt(label= "NC households 13-17 pooled alternative file"); 
    set fiveyeartotal;
+ run;
+
+ proc contents data= fiveyeartotal;
  run;
 
 proc tabulate data=fiveyeartotal format=comma12. noseps missing;
   class county2_char;
-  var hhwt_5;
+  var hhwt_ori hhwt_geo;
   table
     all='Total' county2_char=' ',
-    sum='Sum of HHWTs' * ( hhwt_5='Original 5-year'  )
+    sum='Sum of HHWTs' * ( hhwt_geo='Adjusted to 2015 estimates' hhwt_ori= 'Original 5-year'  )
   / box='Occupied housing units';
   *format county2_char county2_char.;
 run;
 
 data fiveyeartotal_vacant;
 	set Housing_needs_vacant_2013 Housing_needs_vacant_2014 Housing_needs_vacant_2015 Housing_needs_vacant_2016 Housing_needs_vacant_2017;
-
-hhwt_5=hhwt*.2;
+totalpop=0.2;
+merge=1;
+*totpop_wt= totalpop*AFACT2; 
+geoid=.;
+if county2_char= "0100" then geoid=1;
+else if  county2_char= "0200" then geoid=2;
+else if  county2_char= "0300" then geoid=3;
+else if  county2_char= "0400" then geoid=4;
+else if  county2_char= "0500 or 0600" then geoid=5;
+else if  county2_char= "0700" then geoid=6;
+else if  county2_char= "0800" then geoid=7;
+else if  county2_char= "0900" then geoid=8;
+else if  county2_char= "1000" then geoid=9;
+else if  county2_char= "1100" then geoid=10;
+else if  county2_char= "1201 to 1208" then geoid=11;
+else if  county2_char= "1301 to 1302" then geoid=12;
+else if  county2_char= "1400" then geoid=13;
+else if  county2_char= "1500" then geoid=14;
+else if  county2_char= "1600" then geoid=15;
+else if  county2_char= "1701 to 1704" then geoid=16;
+else if  county2_char= "1801 to 1803" then geoid=17;
+else if  county2_char= "1900 or 2900" then geoid=18;
+else if  county2_char= "2000" then geoid=19;
+else if  county2_char= "2100" then geoid=20;
+else if  county2_char= "2201 to 2202" then geoid=21;
+else if  county2_char= "2300 or 2400" then geoid=22;
+else if  county2_char= "2500" then geoid=23;
+else if  county2_char= "2600 or 2700" then geoid=24;
+else if  county2_char= "2800" then geoid=25;
+else if  county2_char= "3001 to 3003" then geoid=26;
+else if  county2_char= "3101 to 3108" then geoid=27;
+else if  county2_char= "3200 or 3300" then geoid=28;
+else if  county2_char= "3400" then geoid=29;
+else if  county2_char= "3500" then geoid=30;
+else if  county2_char= "3600" then geoid=31;
+else if  county2_char= "3700" then geoid=32;
+else if  county2_char= "3800" then geoid=33;
+else if  county2_char= "3900" then geoid=34;
+else if  county2_char= "4000" then geoid=35;
+else if  county2_char= "4100 or 4500" then geoid=36;
+else if  county2_char= "4200" then geoid=37;
+else if  county2_char= "4300" then geoid=38;
+else if  county2_char= "4400" then geoid=39;
+else if  county2_char= "4600 or 4700" then geoid=40;
+else if  county2_char= "4800" then geoid=41;
+else if  county2_char= "4900 or 5100" then geoid=42;
+else if  county2_char= "5001 to 5003" then geoid=43;
+else if  county2_char= "5200" then geoid=44;
+else if  county2_char= "5300 or 5400" then geoid=45;
 run;
 
+proc sort data=fiveyeartotal_vacant;
+by geoid;
+run;
+
+data fiveyeartotal_vacant_c;
+merge fiveyeartotal_vacant calculate_calibration;
+by geoid;
+
+hhwt_geo=.; 
+
+hhwt_geo=hhwt*calibration*0.2; 
+hhwt_ori= hhwt*0.2;
+label hhwt_geo="Household Weight Calibrated to Steven Estimates for Households"
+	  calibration="Ratio of Steven 2015 estimate to ACS 2013-17 for 45 geographic units";
+
+run; 
+
 /*export dataset*/
- data NCHsg.fiveyeartotal_vacant_alt; 
-   set fiveyeartotal_vacant;
+ data NCHsg.fiveyeartotal_vacant_alt(label= "NC vacant units 13-17 pooled alternative file"); 
+   set fiveyeartotal_vacant_c;
  run;
 
-proc tabulate data=fiveyeartotal_vacant format=comma12. noseps missing;
+ proc contents data= fiveyeartotal_vacant_c; run;
+
+proc tabulate data=fiveyeartotal_vacant_c format=comma12. noseps missing;
   class county2_char;
-  var hhwt_5;
+  var hhwt_geo hhwt_ori;
   table
     all='Total' county2_char=' ',
-    sum='Sum of HHWTs' * ( hhwt_5='Original 5-year')
+    sum='Sum of HHWTs' * ( hhwt_geo='Adjusted to 2015 estimates' hhwt_ori= 'Original 5-year')
   / box='Vacant (nonseasonal) housing units';
   *format county2_char county2_char.;
 run;
 
 /*need to account for other vacant units in baseline and future targets for the region to complete picture of the total housing stock*/
+
 data fiveyeartotal_othervacant;
    set other_vacant_2013 other_vacant_2014 other_vacant_2015 other_vacant_2016 other_vacant_2017;
-
-hhwt_5=hhwt*.2;
+totalpop=0.2;
+merge=1;
+*totpop_wt= totalpop*AFACT2; 
+geoid=.;
+if county2_char= "0100" then geoid=1;
+else if  county2_char= "0200" then geoid=2;
+else if  county2_char= "0300" then geoid=3;
+else if  county2_char= "0400" then geoid=4;
+else if  county2_char= "0500 or 0600" then geoid=5;
+else if  county2_char= "0700" then geoid=6;
+else if  county2_char= "0800" then geoid=7;
+else if  county2_char= "0900" then geoid=8;
+else if  county2_char= "1000" then geoid=9;
+else if  county2_char= "1100" then geoid=10;
+else if  county2_char= "1201 to 1208" then geoid=11;
+else if  county2_char= "1301 to 1302" then geoid=12;
+else if  county2_char= "1400" then geoid=13;
+else if  county2_char= "1500" then geoid=14;
+else if  county2_char= "1600" then geoid=15;
+else if  county2_char= "1701 to 1704" then geoid=16;
+else if  county2_char= "1801 to 1803" then geoid=17;
+else if  county2_char= "1900 or 2900" then geoid=18;
+else if  county2_char= "2000" then geoid=19;
+else if  county2_char= "2100" then geoid=20;
+else if  county2_char= "2201 to 2202" then geoid=21;
+else if  county2_char= "2300 or 2400" then geoid=22;
+else if  county2_char= "2500" then geoid=23;
+else if  county2_char= "2600 or 2700" then geoid=24;
+else if  county2_char= "2800" then geoid=25;
+else if  county2_char= "3001 to 3003" then geoid=26;
+else if  county2_char= "3101 to 3108" then geoid=27;
+else if  county2_char= "3200 or 3300" then geoid=28;
+else if  county2_char= "3400" then geoid=29;
+else if  county2_char= "3500" then geoid=30;
+else if  county2_char= "3600" then geoid=31;
+else if  county2_char= "3700" then geoid=32;
+else if  county2_char= "3800" then geoid=33;
+else if  county2_char= "3900" then geoid=34;
+else if  county2_char= "4000" then geoid=35;
+else if  county2_char= "4100 or 4500" then geoid=36;
+else if  county2_char= "4200" then geoid=37;
+else if  county2_char= "4300" then geoid=38;
+else if  county2_char= "4400" then geoid=39;
+else if  county2_char= "4600 or 4700" then geoid=40;
+else if  county2_char= "4800" then geoid=41;
+else if  county2_char= "4900 or 5100" then geoid=42;
+else if  county2_char= "5001 to 5003" then geoid=43;
+else if  county2_char= "5200" then geoid=44;
+else if  county2_char= "5300 or 5400" then geoid=45;
 
 run;
 
+proc sort data= fiveyeartotal_othervacant;
+by geoid;
+run;
+
+data fiveyeartotal_othervacant_c;
+merge fiveyeartotal_othervacant calculate_calibration;
+by geoid;
+
+hhwt_geo=.; 
+
+hhwt_geo=hhwt*calibration*0.2; 
+hhwt_ori= hhwt*0.2;
+label hhwt_geo="Household Weight Calibrated to Steven Estimates for Households"
+	  calibration="Ratio of Steven 2015 estimate to ACS 2013-17 for 45 geographic units";
+
+run; 
+
 /*export dataset*/
- data NCHsg.fiveyeartotal_othervacant_alt; 
-   set fiveyeartotal_othervacant;
+ data NCHsg.fiveyeartotal_othervacant_alt(label= "NC other vacant units 13-17 pooled alternative file"); 
+   set fiveyeartotal_othervacant_c;
  run;
 
-proc tabulate data=fiveyeartotal_othervacant format=comma12. noseps missing;
+ proc contents data= fiveyeartotal_othervacant_c; run;
+
+proc tabulate data=fiveyeartotal_othervacant_c format=comma12. noseps missing;
   class county2_char;
-  var hhwt_5;
+  var hhwt_geo hhwt_ori;
   table
     all='Total' county2_char=' ',
-    sum='Sum of HHWTs' * ( hhwt_5='Original 5-year' )
+    sum='Sum of HHWTs' * (hhwt_geo='Adjusted to 2015 estimates' hhwt_ori= 'Original 5-year')
   / box='Seasonal vacant housing units';
   *format county2_char county2_char.;
 run;
 
-proc freq data=fiveyeartotal_othervacant;
+proc freq data=fiveyeartotal_othervacant_c;
 by county2_char;
 tables vacancy /nopercent norow nocol out=other_vacant;
-weight hhwt_5;
+weight hhwt_geo;
 *format county2_char county2_char.;
 run; 
-proc export data=other_vacant
+
+proc export data=fiveyeartotal_othervacant;
  	outfile="&_dcdata_default_path\NCHsg\Prog\other_vacant_&date..csv"
    dbms=csv
    replace;

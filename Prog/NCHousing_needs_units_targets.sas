@@ -46,24 +46,6 @@ proc format;
     6 = 'More than 200%'
 	;
 
-  value tenure
-    1 = 'Renter units'
-    2 = 'Owner units'
-	;
-/*
-  value county2_char
-    1= "DC"
-	2= "Charles County"
-	3= "Frederick County "
-	4="Montgomery County"
-	5="Prince Georges "
-	6="Arlington"
-	7="Fairfax, Fairfax city and Falls Church"
-	8="Loudoun"
-	9="Prince William, Manassas and Manassas Park"
-    10="Alexandria"
-  	;
-*/
   value rcost
 	  1= "$0 to $749"
 	  2= "$750 to $1,199"
@@ -125,13 +107,8 @@ run;
 proc sort data= crosswalk;
 	by upuma;
 run;
-
-data NC17_limits;
-	set NCHsg.NC17_limits;
-run;
-
-proc sort data= NC17_limits;
-	by MID;
+proc sort data=NCHsg.NC17_limits out=NC17_limits;
+by MID;
 run;
 
 %macro single_year(year);
@@ -155,12 +132,7 @@ run;
 
 	run;
 
-
-	data NCarea_&year._1 ;
-	set Ipums.Acs_&year._NC ;
-	run;
-
-	proc sort data= NCarea_&year._1;
+	proc sort data=Ipums.Acs_&year._NC out=NCarea_&year._1;
 	by upuma;
 	run;
 
@@ -270,10 +242,10 @@ data Housing_needs_baseline_&year._3;
 	 *create maximum desired or affordable rent based on HUD_Inc categories*; 
     /* need to discuss for NC, use hudinc for now*/
 	  if hud_inc in(1 2 3) then max_rent=HHINCOME_a/12*.3; *under 80% of AMI then pay 30% threshold; 
-	  if hud_inc =4 then max_rent=HHINCOME_a/12*.25; *avg for all HH hud_inc=4; 
-	  if costratio <=.18 and hud_inc = 5 then max_rent=HHINCOME_a/12*.18; *avg for all HH hud_inc=5; 	
+	  if hud_inc =4 then max_rent=HHINCOME_a/12*.2; *avg for all HH hud_inc=4 in NC; 
+	  if costratio <=.16 and hud_inc = 5 then max_rent=HHINCOME_a/12*.16; *avg for all HH hud_inc=5 in NC; 	
 		else if hud_inc = 5 then max_rent=HHINCOME_a/12*costratio; *allow 120-200% above average to spend more; 
-	  if costratio <=.12 and hud_inc = 6 then max_rent=HHINCOME_a/12*.12; *avg for all HH hud_inc=6; 
+	  if costratio <=.15 and hud_inc = 6 then max_rent=HHINCOME_a/12*.15; *avg for all HH hud_inc=6 in NC; 
 	  	else if hud_inc=6 then max_rent=HHINCOME_a/12*costratio; *allow 200%+ above average to spend more; 
      
 	 *create flag for household could "afford" to pay more; 
@@ -288,30 +260,30 @@ data Housing_needs_baseline_&year._3;
     	*rent cost categories that make more sense for rents - no longer used in targets;
 		/*need to discuss for NC*/
 			rentlevel=.;
-			if 0 <=rentgrs_a<750 then rentlevel=1;
-			if 750 <=rentgrs_a<1200 then rentlevel=2;
-			if 1200 <=rentgrs_a<1500 then rentlevel=3;
-			if 1500 <=rentgrs_a<2000 then rentlevel=4;
-			if 2000 <=rentgrs_a<2500 then rentlevel=5;
-			if rentgrs_a >= 2500 then rentlevel=6;
+			if 0 <=rentgrs_a<350 then rentlevel=1;  /*~~12831(mean inc for 30%AMI 4 person HH renters)/12*0.3 */
+			if 350 <=rentgrs_a<700 then rentlevel=2;
+			if 700 <=rentgrs_a<1050 then rentlevel=3;
+			if 1050 <=rentgrs_a<1550 then rentlevel=4;
+			if 1550 <=rentgrs_a<2400 then rentlevel=5;
+			if rentgrs_a >= 2400 then rentlevel=6;
 
 			mrentlevel=.;
-			if max_rent<750 then mrentlevel=1;
-			if 750 <=max_rent<1200 then mrentlevel=2;
-			if 1200 <=max_rent<1500 then mrentlevel=3;
-			if 1500 <=max_rent<2000 then mrentlevel=4;
-			if 2000 <=max_rent<2500 then mrentlevel=5;
-			if max_rent >= 2500 then mrentlevel=6;
+			if max_rent<350 then mrentlevel=1;
+			if 350 <=max_rent<700 then mrentlevel=2;
+			if 700 <=max_rent<1050 then mrentlevel=3;
+			if 1050 <=max_rent<1550 then mrentlevel=4;
+			if 1550 <=max_rent<2400 then mrentlevel=5;
+			if max_rent >= 2400 then mrentlevel=6;
 
 		 *rent cost categories now used in targets that provide a set of categories useable for renters and owners combined; 
 			/*need to discuss for NC*/
 			allcostlevel=.;
-			if rentgrs_a<800 then allcostlevel=1;
-			if 800 <=rentgrs_a<1300 then allcostlevel=2;
-			if 1300 <=rentgrs_a<1800 then allcostlevel=3;
-			if 1800 <=rentgrs_a<2500 then allcostlevel=4;
-			if 2500 <=rentgrs_a<3500 then allcostlevel=5;
-			if rentgrs_a >= 3500 then allcostlevel=6; 
+			if rentgrs_a<350 then allcostlevel=1;  /*~~13242(mean inc for 30%AMI 4 person HH renters and ower)/12*0.3 */
+			if 350 <=rentgrs_a<700 then allcostlevel=2;
+			if 700 <=rentgrs_a<1050 then allcostlevel=3;
+			if 1050 <=rentgrs_a<1500 then allcostlevel=4;
+			if 1500 <=rentgrs_a<2500 then allcostlevel=5;
+			if rentgrs_a >= 2500 then allcostlevel=6; 
 
 			mallcostlevel=.;
 
@@ -320,23 +292,23 @@ data Housing_needs_baseline_&year._3;
 
 			if costburden=1 then do; 
 
-				if max_rent<800 then mallcostlevel=1;
-				if 800 <=max_rent<1300 then mallcostlevel=2;
-				if 1300 <=max_rent<1800 then mallcostlevel=3;
-				if 1800 <=max_rent<2500 then mallcostlevel=4;
-				if 2500 <=max_rent<3500 then mallcostlevel=5;
-				if max_rent >= 3500 then mallcostlevel=6;
+				if max_rent<350 then mallcostlevel=1;
+				if 350 <=max_rent<700 then mallcostlevel=2;
+				if 700 <=max_rent<1050 then mallcostlevel=3;
+				if 1050 <=max_rent<1500 then mallcostlevel=4;
+				if 1500 <=max_rent<2500 then mallcostlevel=5;
+				if max_rent >= 2500 then mallcostlevel=6;
 
 			end; 
 
 			else if costburden=0 then do;
 
-				if rentgrs_a<800 then mallcostlevel=1;
-				if 800 <=rentgrs_a<1300 then mallcostlevel=2;
-				if 1300 <=rentgrs_a<1800 then mallcostlevel=3;
-				if 1800 <=rentgrs_a<2500 then mallcostlevel=4;
-				if 2500 <=rentgrs_a<3500 then mallcostlevel=5;
-				if rentgrs_a >= 3500 then mallcostlevel=6;
+				if rentgrs_a<350 then mallcostlevel=1;
+				if 350 <=rentgrs_a<700 then mallcostlevel=2;
+				if 700 <=rentgrs_a<1050 then mallcostlevel=3;
+				if 1050 <=rentgrs_a<1500 then mallcostlevel=4;
+				if 1500 <=rentgrs_a<2500 then mallcostlevel=5;
+				if rentgrs_a >= 2500 then mallcostlevel=6;
 
 			end; 
 
@@ -356,10 +328,10 @@ data Housing_needs_baseline_&year._3;
 
 		/*need to discuss for NC*/
 		if hud_inc in(1 2 3) then max_ocost=HHINCOME_a/12*.3; *under 80% of AMI then pay 30% threshold; 
-		if hud_inc =4 then max_ocost=HHINCOME_a/12*.25; *avg for all HH hud_inc=4;
-		if costratio <=.18 and hud_inc = 5 then max_ocost=HHINCOME_a/12*.18; *avg for all HH HUD_inc=5; 
+		if hud_inc =4 then max_ocost=HHINCOME_a/12*.20; *avg for all HH hud_inc=4in NC;
+		if costratio <=.16 and hud_inc = 5 then max_ocost=HHINCOME_a/12*.16; *avg for all HH HUD_inc=5; 
 			else if hud_inc = 5 then max_ocost=HHINCOME_a/12*costratio; *allow 120-200% above average to pay more; 
-		if costratio <=.12 and hud_inc=6 then max_ocost=HHINCOME_a/12*.12; *avg for all HH HUD_inc=6;
+		if costratio <=.15 and hud_inc=6 then max_ocost=HHINCOME_a/12*.15; *avg for all HH HUD_inc=6;
 			else if hud_inc = 6 then max_ocost=HHINCOME_a/12*costratio; *allow 120-200% above average to pay more; 
 		
 		*create flag for household could "afford" to pay more; 
@@ -393,38 +365,38 @@ data Housing_needs_baseline_&year._3;
 		*owner cost categories that make more sense for owner costs - no longer used in targets;
        /*need to discuss for NC*/
 		ownlevel=.;
-			if 0 <=total_month<1200 then ownlevel=1;
-			if 1200 <=total_month<1800 then ownlevel=2;
-			if 1800 <=total_month<2500 then ownlevel=3;
-			if 2500 <=total_month<3200 then ownlevel=4;
-			if 3200 <=total_month<4200 then ownlevel=5;
-			if total_month >= 4200 then ownlevel=6;
+			if 0 <=total_month<350 then ownlevel=1;
+			if 350 <=total_month<700 then ownlevel=2;
+			if 700 <=total_month<1050 then ownlevel=3;
+			if 1050 <=total_month<1500 then ownlevel=4;
+			if 1500 <=total_month<2500 then ownlevel=5;
+			if total_month >= 2500 then ownlevel=6;
 
 		mownlevel=.;
-			if max_ocost<1200 then mownlevel=1;
-			if 1200 <=max_ocost<1800 then mownlevel=2;
-			if 1800 <=max_ocost<2500 then mownlevel=3;
-			if 2500 <=max_ocost<3200 then mownlevel=4;
-			if 3200 <=max_ocost<4200 then mownlevel=5;
-			if max_ocost >= 4200 then mownlevel=6;
+			if max_ocost<350 then mownlevel=1;
+			if 350 <=max_ocost<700 then mownlevel=2;
+			if 700 <=max_ocost<1050 then mownlevel=3;
+			if 1050 <=max_ocost<1500 then mownlevel=4;
+			if 1500 <=max_ocost<2500 then mownlevel=5;
+			if max_ocost >= 2500 then mownlevel=6;
 
         *Leah: this is where it differs from the other program
 		 		*owner cost categories now used in targets that provide a set of categories useable for renters and owners combined; 
 			allcostlevel=.;
-			if total_month<800 then allcostlevel=1;
-			if 800 <=total_month<1300 then allcostlevel=2;
-			if 1300 <=total_month<1800 then allcostlevel=3;
-			if 1800 <=total_month<2500 then allcostlevel=4;
-			if 2500 <=total_month<3500 then allcostlevel=5;
-			if total_month >= 3500 then allcostlevel=6; 
+			if total_month<350 then allcostlevel=1;
+			if 350 <=total_month<700 then allcostlevel=2;
+			if 700 <=total_month<1050 then allcostlevel=3;
+			if 1050 <=total_month<1500 then allcostlevel=4;
+			if 1500 <=total_month<2500 then allcostlevel=5;
+			if total_month >= 2500 then allcostlevel=6; 
 
 				mallcostlevel=.;
-			if max_ocost<800 then mallcostlevel=1;
-			if 800 <=max_ocost<1300 then mallcostlevel=2;
-			if 1300 <=max_ocost<1800 then mallcostlevel=3;
-			if 1800 <=max_ocost<2500 then mallcostlevel=4;
-			if 2500 <=max_ocost<3500 then mallcostlevel=5;
-			if max_ocost >= 3500 then mallcostlevel=6;
+			if max_ocost<350 then mallcostlevel=1;
+			if 350 <=max_ocost<700 then mallcostlevel=2;
+			if 700 <=max_ocost<1050 then mallcostlevel=3;
+			if 1050 <=max_ocost<1500 then mallcostlevel=4;
+			if 1500 <=max_ocost<2500 then mallcostlevel=5;
+			if max_ocost >= 2500 then mallcostlevel=6;
 
   end;
 
@@ -502,21 +474,21 @@ data Housing_needs_vacant_&year. Other_vacant_&year. ;
 		/*create rent level categories*/ 
 			/*need to discuss for NC*/
 		rentlevel=.;
-		if 0 <=rentgrs_a<750 then rentlevel=1;
-		if 750 <=rentgrs_a<1200 then rentlevel=2;
-		if 1200 <=rentgrs_a<1500 then rentlevel=3;
-		if 1500 <=rentgrs_a<2000 then rentlevel=4;
-		if 2000 <=rentgrs_a<2500 then rentlevel=5;
+		if 0 <=rentgrs_a<350 then rentlevel=1;
+		if 350 <=rentgrs_a<700 then rentlevel=2;
+		if 700 <=rentgrs_a<1050 then rentlevel=3;
+		if 1050 <=rentgrs_a<1500 then rentlevel=4;
+		if 1500 <=rentgrs_a<2500 then rentlevel=5;
 		if rentgrs_a >= 2500 then rentlevel=6;
 
 		/*create  categories now used in targets for renter/owner costs combined*/ 
 				allcostlevel=.;
-				if rentgrs_a<800 then allcostlevel=1;
-				if 800 <=rentgrs_a<1300 then allcostlevel=2;
-				if 1300 <=rentgrs_a<1800 then allcostlevel=3;
-				if 1800 <=rentgrs_a<2500 then allcostlevel=4;
-				if 2500 <=rentgrs_a<3500 then allcostlevel=5;
-				if rentgrs_a >= 3500 then allcostlevel=6;
+				if rentgrs_a<350 then allcostlevel=1;
+				if 350 <=rentgrs_a<700 then allcostlevel=2;
+				if 700 <=rentgrs_a<1050 then allcostlevel=3;
+				if 1050 <=rentgrs_a<1500 then allcostlevel=4;
+				if 1500 <=rentgrs_a<2500 then allcostlevel=5;
+				if rentgrs_a >= 2500 then allcostlevel=6;
 	  end;
 
 
@@ -546,21 +518,21 @@ data Housing_needs_vacant_&year. Other_vacant_&year. ;
 		
 			/*create owner cost level categories*/ 
 			ownlevel=.;
-				if 0 <=total_month<1200 then ownlevel=1;
-				if 1200 <=total_month<1800 then ownlevel=2;
-				if 1800 <=total_month<2500 then ownlevel=3;
-				if 2500 <=total_month<3200 then ownlevel=4;
-				if 3200 <=total_month<4200 then ownlevel=5;
-				if total_month >= 4200 then ownlevel=6;
+				if 0 <=total_month<350 then ownlevel=1;
+				if 350 <=total_month<700 then ownlevel=2;
+				if 700 <=total_month<1050 then ownlevel=3;
+				if 1050 <=total_month<1500 then ownlevel=4;
+				if 1500 <=total_month<2500 then ownlevel=5;
+				if total_month >= 2500 then ownlevel=6;
 			
 			/*create  categories now used in targets for renter/owner costs combined*/ 
 				allcostlevel=.;
-				if total_month<800 then allcostlevel=1;
-				if 800 <=total_month<1300 then allcostlevel=2;
-				if 1300 <=total_month<1800 then allcostlevel=3;
-				if 1800 <=total_month<2500 then allcostlevel=4;
-				if 2500 <=total_month<3500 then allcostlevel=5;
-				if total_month >= 3500 then allcostlevel=6; 
+				if total_month<350 then allcostlevel=1;
+				if 350 <=total_month<700 then allcostlevel=2;
+				if 700 <=total_month<1050 then allcostlevel=3;
+				if 1050 <=total_month<1500 then allcostlevel=4;
+				if 1500 <=total_month<2500 then allcostlevel=5;
+				if total_month >= 2500 then allcostlevel=6; 
 
 
 	  end;
@@ -617,7 +589,7 @@ data fiveyeartotal1;
 set Housing_needs_baseline_2013_3 Housing_needs_baseline_2014_3 Housing_needs_baseline_2015_3 Housing_needs_baseline_2016_3 Housing_needs_baseline_2017_3;
 totalpop=0.2;
 merge=1;
-totpop_wt= totalpop*AFACT2; 
+*totpop_wt= totalpop*AFACT2; 
 geoid=.;
 if county2_char= "0100" then geoid=1;
 else if  county2_char= "0200" then geoid=2;
@@ -666,12 +638,37 @@ else if  county2_char= "5200" then geoid=44;
 else if  county2_char= "5300 or 5400" then geoid=45;
 
 run;
+
+/*calculate average cost ratio for each hud_inc group that is used for maximum desired or affordable rent/owncost*/
+proc sort data= fiveyeartotal1;
+by hud_inc tenure;
+run;
+
+proc summary data= fiveyeartotal1;
+by hud_inc /*tenure*/;
+var costratio HHincome_a;
+output out= costratio_hudinc mean=;
+run;
+
+proc summary data= fiveyeartotal1(where=(numprec=4));
+by hud_inc tenure;
+var HHincome_a owncost_a rentgrs_a;
+output out= incomecategories mean=;
+run;
+
+proc summary data= fiveyeartotal1(where=(numprec=4));
+by hud_inc;
+var HHincome_a owncost_a rentgrs_a;
+output out= combinedcat mean=;
+run;
+
+/*calibrate ipums to 2015 population projection*/ 
 proc sort data= fiveyeartotal1;
 by geoid;
 run;
 proc summary data=fiveyeartotal1;
 by geoid;
-var totpop_wt;
+var totalpop;
 weight hhwt;
 output out=geo_sum sum=ACS_13_17;
 run; 
@@ -730,28 +727,33 @@ if hhincome_a in ( 9999999, .n ) then inc = .n;
 	    label /*hud_inc = 'HUD Income Limits category for household (2016)'*/
 	    inc='Income quintiles statewide not account for HH size';
 		format inc inc_cat.; 
+	hhwt_ori= hhwt*0.2;
 run;
 
 /*export dataset*/
- data NCHsg.fiveyeartotal; 
+ data NCHsg.fiveyeartotal (label= "NC households 13-17 pooled"); 
    set fiveyeartotal;
+ run;
+
+ proc contents data= NCHsg.fiveyeartotal;
  run;
 
 proc tabulate data=fiveyeartotal format=comma12. noseps missing;
   class county2_char;
-  var hhwt_geo;
+  var hhwt_ori hhwt_geo;
   table
     all='Total' county2_char=' ',
-    sum='Sum of HHWTs' * ( hhwt_geo='Original 5-year'  )
+    sum='Sum of HHWTs' * ( hhwt_ori='Original 5-year' hhwt_geo= 'Adjusted to 2015 estimates' )
   / box='Occupied housing units';
   *format county2_char county2_char.;
 run;
+
 
 data fiveyeartotal_vacant;
 	set Housing_needs_vacant_2013 Housing_needs_vacant_2014 Housing_needs_vacant_2015 Housing_needs_vacant_2016 Housing_needs_vacant_2017;
 totalpop=0.2;
 merge=1;
-totpop_wt= totalpop*AFACT2; 
+*totpop_wt= totalpop*AFACT2; 
 geoid=.;
 if county2_char= "0100" then geoid=1;
 else if  county2_char= "0200" then geoid=2;
@@ -811,23 +813,25 @@ by geoid;
 hhwt_geo=.; 
 
 hhwt_geo=hhwt*calibration*0.2; 
-
+hhwt_ori= hhwt*0.2;
 label hhwt_geo="Household Weight Calibrated to Steven Estimates for Households"
 	  calibration="Ratio of Steven 2015 estimate to ACS 2013-17 for 45 geographic units";
 
 run; 
 
 /*export dataset*/
- data NCHsg.fiveyeartotal_vacant; 
+ data NCHsg.fiveyeartotal_vacant(label= "NC vacant housing units 13-17 pooled"); 
    set fiveyeartotal_vacant_c;
+   hhwt_ori= hhwt*0.2;
  run;
+ proc contents data =fiveyeartotal_vacant_c;run;
 
 proc tabulate data=fiveyeartotal_vacant_c format=comma12. noseps missing;
   class county2_char;
-  var hhwt_geo;
+  var hhwt_geo hhwt_ori;
   table
     all='Total' county2_char=' ',
-    sum='Sum of HHWTs' * ( hhwt_geo='Original 5-year')
+    sum='Sum of HHWTs' * ( hhwt_geo='Adjusted to 2015 estimates' hhwt_ori= 'Original 5-year')
   / box='Vacant (nonseasonal) housing units';
   *format county2_char county2_char.;
 run;
@@ -837,7 +841,7 @@ data fiveyeartotal_othervacant;
    set other_vacant_2013 other_vacant_2014 other_vacant_2015 other_vacant_2016 other_vacant_2017;
 totalpop=0.2;
 merge=1;
-totpop_wt= totalpop*AFACT2; 
+*totpop_wt= totalpop*AFACT2; 
 geoid=.;
 if county2_char= "0100" then geoid=1;
 else if  county2_char= "0200" then geoid=2;
@@ -898,23 +902,26 @@ by geoid;
 hhwt_geo=.; 
 
 hhwt_geo=hhwt*calibration*0.2; 
-
+hhwt_ori= hhwt*0.2;
 label hhwt_geo="Household Weight Calibrated to Steven Estimates for Households"
 	  calibration="Ratio of Steven 2015 estimate to ACS 2013-17 for 45 geographic units";
 
 run; 
 
 /*export dataset*/
- data NCHsg.fiveyeartotal_othervacant; 
+ data NCHsg.fiveyeartotal_othervacant (label= "NC other vacant units 13-17 pooled"); 
    set fiveyeartotal_othervacant_c;
+ run;
+
+ proc contents data= fiveyeartotal_othervacant_c;
  run;
 
 proc tabulate data=fiveyeartotal_othervacant_c format=comma12. noseps missing;
   class county2_char;
-  var hhwt_geo;
+  var hhwt_geo hhwt_ori;
   table
     all='Total' county2_char=' ',
-    sum='Sum of HHWTs' * ( hhwt_geo='Original 5-year' )
+    sum='Sum of HHWTs' * ( hhwt_geo='Adjusted to 2015 estimates' hhwt_ori= 'Original 5-year' )
   / box='Seasonal vacant housing units';
   *format county2_char county2_char.;
 run;
