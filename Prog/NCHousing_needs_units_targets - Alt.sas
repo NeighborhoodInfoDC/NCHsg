@@ -55,32 +55,31 @@ proc format;
 	;
 
   value rcost
-	  1= "$0 to $749"
-	  2= "$750 to $1,199"
-	  3= "$1,200 to $1,499"
-	  4= "$1,500 to $1,999"
-	  5= "$2,000 to $2,499"
+	  1= "$0 to $349"
+	  2= "$350 to $699"
+	  3= "$700 to $1,049"
+	  4= "$1,050 to $1,499"
+	  5= "$1,500 to $2,499"
 	  6= "More than $2,500"
   ;
 
   value ocost
-	  1= "$0 to $1,199"
-	  2= "$1,200 to $1,799"
-	  3= "$1,800 to $2,499"
-	  4= "$2,500 to $3,199"
-	  5= "$3,200 to $4,199"
-	  6= "More than $4,200"
+	  1= "$0 to $349"
+	  2= "$350 to $699"
+	  3= "$700 to $1,049"
+	  4= "$1,050 to $1,499"
+	  5= "$1,500 to $2,499"
+	  6= "More than $2,500"
   ;
 
   value acost
-	  1= "$0 to $799"
-	  2= "$800 to $1,299"
-	  3= "$1,300 to $1,799"
-	  4= "$1,800 to $2,499"
-	  5= "$2,500 to $3,499"
-	  6= "More than $3,500"
-  ;
-	
+	  1= "$0 to $349"
+	  2= "$350 to $699"
+	  3= "$700 to $1,049"
+	  4= "$1,050 to $1,499"
+	  5= "$1,500 to $2,499"
+	  6= "More than $2,500"
+   ;
 
   value inc_cat
 
@@ -249,30 +248,30 @@ data Housing_needs_baseline_&year._3;
     	*rent cost categories that make more sense for rents - no longer used in targets;
 		/*need to discuss for NC*/
 			rentlevel=.;
-			if 0 <=rentgrs_a<750 then rentlevel=1;
-			if 750 <=rentgrs_a<1200 then rentlevel=2;
-			if 1200 <=rentgrs_a<1500 then rentlevel=3;
-			if 1500 <=rentgrs_a<2000 then rentlevel=4;
-			if 2000 <=rentgrs_a<2500 then rentlevel=5;
+			if 0 <=rentgrs_a<350 then rentlevel=1;
+			if 350 <=rentgrs_a<700 then rentlevel=2;
+			if 700 <=rentgrs_a<1050 then rentlevel=3;
+			if 1050 <=rentgrs_a<1500 then rentlevel=4;
+			if 1500 <=rentgrs_a<2500 then rentlevel=5;
 			if rentgrs_a >= 2500 then rentlevel=6;
 
 			mrentlevel=.;
-			if max_rent<750 then mrentlevel=1;
-			if 750 <=max_rent<1200 then mrentlevel=2;
-			if 1200 <=max_rent<1500 then mrentlevel=3;
-			if 1500 <=max_rent<2000 then mrentlevel=4;
-			if 2000 <=max_rent<2500 then mrentlevel=5;
+			if max_rent<350 then mrentlevel=1;
+			if 350 <=max_rent<700 then mrentlevel=2;
+			if 700 <=max_rent<1050 then mrentlevel=3;
+			if 1050 <=max_rent<1500 then mrentlevel=4;
+			if 1500 <=max_rent<2500 then mrentlevel=5;
 			if max_rent >= 2500 then mrentlevel=6;
 
 		 *rent cost categories now used in targets that provide a set of categories useable for renters and owners combined; 
 			/*need to discuss for NC*/
 			allcostlevel=.;
-			if rentgrs_a<800 then allcostlevel=1;
-			if 800 <=rentgrs_a<1300 then allcostlevel=2;
-			if 1300 <=rentgrs_a<1800 then allcostlevel=3;
-			if 1800 <=rentgrs_a<2500 then allcostlevel=4;
-			if 2500 <=rentgrs_a<3500 then allcostlevel=5;
-			if rentgrs_a >= 3500 then allcostlevel=6; 
+			if rentgrs_a<350 then allcostlevel=1;
+			if 350 <=rentgrs_a<700 then allcostlevel=2;
+			if 700 <=rentgrs_a<1050 then allcostlevel=3;
+			if 1050 <=rentgrs_a<1500 then allcostlevel=4;
+			if 1500 <=rentgrs_a<2500 then allcostlevel=5;
+			if rentgrs_a >= 2500 then allcostlevel=6; 
 
 			mallcostlevel=.;
 
@@ -281,23 +280,23 @@ data Housing_needs_baseline_&year._3;
 
 			if costburden=1 then do; 
 
-				if max_rent<800 then mallcostlevel=1;
-				if 800 <=max_rent<1300 then mallcostlevel=2;
-				if 1300 <=max_rent<1800 then mallcostlevel=3;
-				if 1800 <=max_rent<2500 then mallcostlevel=4;
-				if 2500 <=max_rent<3500 then mallcostlevel=5;
-				if max_rent >= 3500 then mallcostlevel=6;
+				if max_rent<350 then mallcostlevel=1;
+				if 350 <=max_rent<700 then mallcostlevel=2;
+				if 700 <=max_rent<1050 then mallcostlevel=3;
+				if 1050 <=max_rent<1500 then mallcostlevel=4;
+				if 1500 <=max_rent<2500 then mallcostlevel=5;
+				if max_rent >= 2500 then mallcostlevel=6;
 
 			end; 
 
 			else if costburden=0 then do;
 
-				if rentgrs_a<800 then mallcostlevel=1;
-				if 800 <=rentgrs_a<1300 then mallcostlevel=2;
-				if 1300 <=rentgrs_a<1800 then mallcostlevel=3;
-				if 1800 <=rentgrs_a<2500 then mallcostlevel=4;
-				if 2500 <=rentgrs_a<3500 then mallcostlevel=5;
-				if rentgrs_a >= 3500 then mallcostlevel=6;
+				if rentgrs_a<350 then mallcostlevel=1;
+				if 350 <=rentgrs_a<700 then mallcostlevel=2;
+				if 700 <=rentgrs_a<1050 then mallcostlevel=3;
+				if 1050 <=rentgrs_a<1500 then mallcostlevel=4;
+				if 1500 <=rentgrs_a<2500 then mallcostlevel=5;
+				if rentgrs_a >= 2500 then mallcostlevel=6;
 
 			end; 
 
@@ -356,30 +355,30 @@ data Housing_needs_baseline_&year._3;
 		*owner cost categories that make more sense for owner costs - no longer used in targets;
        /*need to discuss for NC*/
 		ownlevel=.;
-			if 0 <=total_month<1200 then ownlevel=1;
-			if 1200 <=total_month<1800 then ownlevel=2;
-			if 1800 <=total_month<2500 then ownlevel=3;
-			if 2500 <=total_month<3200 then ownlevel=4;
-			if 3200 <=total_month<4200 then ownlevel=5;
-			if total_month >= 4200 then ownlevel=6;
+			if 0 <=total_month<350 then ownlevel=1;
+			if 350 <=total_month<700 then ownlevel=2;
+			if 000 <=total_month<1050 then ownlevel=3;
+			if 1050 <=total_month<1500 then ownlevel=4;
+			if 1500 <=total_month<2500 then ownlevel=5;
+			if total_month >= 2500 then ownlevel=6;
 
 		mownlevel=.;
-			if max_ocost<1200 then mownlevel=1;
-			if 1200 <=max_ocost<1800 then mownlevel=2;
-			if 1800 <=max_ocost<2500 then mownlevel=3;
-			if 2500 <=max_ocost<3200 then mownlevel=4;
-			if 3200 <=max_ocost<4200 then mownlevel=5;
-			if max_ocost >= 4200 then mownlevel=6;
+			if max_ocost<350 then mownlevel=1;
+			if 350 <=max_ocost<700 then mownlevel=2;
+			if 700 <=max_ocost<1050 then mownlevel=3;
+			if 1050 <=max_ocost<1500 then mownlevel=4;
+			if 1500 <=max_ocost<2500 then mownlevel=5;
+			if max_ocost >= 2500 then mownlevel=6;
 
          * Leah: this is what differs from the other program
 		 *owner cost categories now used in targets that provide a set of categories useable for renters and owners combined; 
 			allcostlevel=.;
-			if owncost_a<800 then allcostlevel=1;
-			if 800 <=owncost_a<1300 then allcostlevel=2;
-			if 1300 <=owncost_a<1800 then allcostlevel=3;
-			if 1800 <=owncost_a<2500 then allcostlevel=4;
-			if 2500 <=owncost_a<3500 then allcostlevel=5;
-			if owncost_a >= 3500 then allcostlevel=6; 
+			if owncost_a<350 then allcostlevel=1;
+			if 350 <=owncost_a<700 then allcostlevel=2;
+			if 700 <=owncost_a<1050 then allcostlevel=3;
+			if 1050 <=owncost_a<1500 then allcostlevel=4;
+			if 1500 <=owncost_a<2500 then allcostlevel=5;
+			if owncost_a >= 2500 then allcostlevel=6; 
 
 	
 			*for desired cost for current housing needs is current payment if not cost-burdened
@@ -388,23 +387,23 @@ data Housing_needs_baseline_&year._3;
 
 			if costburden=1 then do; 
 
-				if max_ocost<800 then mallcostlevel=1;
-				if 800 <=max_ocost<1300 then mallcostlevel=2;
-				if 1300 <=max_ocost<1800 then mallcostlevel=3;
-				if 1800 <=max_ocost<2500 then mallcostlevel=4;
-				if 2500 <=max_ocost<3500 then mallcostlevel=5;
-				if max_ocost >= 3500 then mallcostlevel=6;
+				if max_ocost<350 then mallcostlevel=1;
+				if 350 <=max_ocost<700 then mallcostlevel=2;
+				if 700 <=max_ocost<1050 then mallcostlevel=3;
+				if 1050 <=max_ocost<1500 then mallcostlevel=4;
+				if 1500 <=max_ocost<2500 then mallcostlevel=5;
+				if max_ocost >= 2500 then mallcostlevel=6;
 
 			end;
 
 			else if costburden=0 then do; 
 
-				if owncost_a<800 then mallcostlevel=1;
-				if 800 <=owncost_a<1300 then mallcostlevel=2;
-				if 1300 <=owncost_a<1800 then mallcostlevel=3;
-				if 1800 <=owncost_a<2500 then mallcostlevel=4;
-				if 2500 <=owncost_a<3500 then mallcostlevel=5;
-				if owncost_a >= 3500 then mallcostlevel=6;
+				if owncost_a<350 then mallcostlevel=1;
+				if 350 <=owncost_a<700 then mallcostlevel=2;
+				if 700 <=owncost_a<1050 then mallcostlevel=3;
+				if 1050 <=owncost_a<1500 then mallcostlevel=4;
+				if 1500 <=owncost_a<2500 then mallcostlevel=5;
+				if owncost_a >= 2500 then mallcostlevel=6;
 
 			end; 
   end;
@@ -483,8 +482,8 @@ data Housing_needs_vacant_&year. Other_vacant_&year. ;
 
 		if rent in ( 9999999, .n , . ) then affordable_vacant=.;
 		else do; 
-		    if rentgrs_a<750 then affordable_vacant=1;
-			else if rentgrs_a>=750 then affordable_vacant=0;
+		    if rentgrs_a<700 then affordable_vacant=1;
+			else if rentgrs_a>=700 then affordable_vacant=0;
 
 		end;
 
@@ -493,21 +492,21 @@ data Housing_needs_vacant_&year. Other_vacant_&year. ;
 		/*create rent level categories*/ 
 			/*need to discuss for NC*/
 		rentlevel=.;
-		if 0 <=rentgrs_a<750 then rentlevel=1;
-		if 750 <=rentgrs_a<1200 then rentlevel=2;
-		if 1200 <=rentgrs_a<1500 then rentlevel=3;
-		if 1500 <=rentgrs_a<2000 then rentlevel=4;
-		if 2000 <=rentgrs_a<2500 then rentlevel=5;
+		if 0 <=rentgrs_a<350 then rentlevel=1;
+		if 350 <=rentgrs_a<700 then rentlevel=2;
+		if 700 <=rentgrs_a<1050 then rentlevel=3;
+		if 1050 <=rentgrs_a<1500 then rentlevel=4;
+		if 1500 <=rentgrs_a<2500 then rentlevel=5;
 		if rentgrs_a >= 2500 then rentlevel=6;
 
 		/*create  categories now used in targets for renter/owner costs combined*/ 
 				allcostlevel=.;
-				if rentgrs_a<800 then allcostlevel=1;
-				if 800 <=rentgrs_a<1300 then allcostlevel=2;
-				if 1300 <=rentgrs_a<1800 then allcostlevel=3;
-				if 1800 <=rentgrs_a<2500 then allcostlevel=4;
-				if 2500 <=rentgrs_a<3500 then allcostlevel=5;
-				if rentgrs_a >= 3500 then allcostlevel=6;
+				if rentgrs_a<350 then allcostlevel=1;
+				if 350 <=rentgrs_a<700 then allcostlevel=2;
+				if 700 <=rentgrs_a<1050 then allcostlevel=3;
+				if 1050 <=rentgrs_a<1500 then allcostlevel=4;
+				if 1500 <=rentgrs_a<2500 then allcostlevel=5;
+				if rentgrs_a >= 2500 then allcostlevel=6;
 	  end;
 
 
@@ -537,22 +536,21 @@ data Housing_needs_vacant_&year. Other_vacant_&year. ;
 		
 			/*create owner cost level categories*/ 
 			ownlevel=.;
-				if 0 <=total_month<1200 then ownlevel=1;
-				if 1200 <=total_month<1800 then ownlevel=2;
-				if 1800 <=total_month<2500 then ownlevel=3;
-				if 2500 <=total_month<3200 then ownlevel=4;
-				if 3200 <=total_month<4200 then ownlevel=5;
-				if total_month >= 4200 then ownlevel=6;
+				if 0 <=total_month<350 then ownlevel=1;
+				if 350 <=total_month<700 then ownlevel=2;
+				if 700 <=total_month<1050 then ownlevel=3;
+				if 1050 <=total_month<1500 then ownlevel=4;
+				if 1500 <=total_month<2500 then ownlevel=5;
+				if total_month >= 2500 then ownlevel=6;
 			
 			/*create  categories now used in targets for renter/owner costs combined*/ 
 				allcostlevel=.;
-				if total_month<800 then allcostlevel=1;
-				if 800 <=total_month<1300 then allcostlevel=2;
-				if 1300 <=total_month<1800 then allcostlevel=3;
-				if 1800 <=total_month<2500 then allcostlevel=4;
-				if 2500 <=total_month<3500 then allcostlevel=5;
-				if total_month >= 3500 then allcostlevel=6; 
-
+				if total_month<350 then allcostlevel=1;
+				if 350 <=total_month<700 then allcostlevel=2;
+				if 700 <=total_month<1050 then allcostlevel=3;
+				if 1050 <=total_month<1500 then allcostlevel=4;
+				if 1500 <=total_month<2500 then allcostlevel=5;
+				if total_month >= 2500 then allcostlevel=6; 
 
 	  end;
 

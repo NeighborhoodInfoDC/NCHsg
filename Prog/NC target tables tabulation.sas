@@ -50,45 +50,32 @@ proc format;
     1 = 'Renter units'
     2 = 'Owner units'
 	;
-/*
-  value county2_char
-    1= "DC"
-	2= "Charles County"
-	3= "Frederick County "
-	4="Montgomery County"
-	5="Prince Georges "
-	6="Arlington"
-	7="Fairfax, Fairfax city and Falls Church"
-	8="Loudoun"
-	9="Prince William, Manassas and Manassas Park"
-    10="Alexandria"
-  	;
-*/
-  value rcost
-	  1= "$0 to $749"
-	  2= "$750 to $1,199"
-	  3= "$1,200 to $1,499"
-	  4= "$1,500 to $1,999"
-	  5= "$2,000 to $2,499"
+
+ value rcost
+	  1= "$0 to $349"
+	  2= "$350 to $699"
+	  3= "$700 to $1,049"
+	  4= "$1,050 to $1,499"
+	  5= "$1,500 to $2,499"
 	  6= "More than $2,500"
   ;
 
   value ocost
-	  1= "$0 to $1,199"
-	  2= "$1,200 to $1,799"
-	  3= "$1,800 to $2,499"
-	  4= "$2,500 to $3,199"
-	  5= "$3,200 to $4,199"
-	  6= "More than $4,200"
+	  1= "$0 to $349"
+	  2= "$350 to $699"
+	  3= "$700 to $1,049"
+	  4= "$1,050 to $1,499"
+	  5= "$1,500 to $2,499"
+	  6= "More than $2,500"
   ;
 
   value acost
-	  1= "$0 to $799"
-	  2= "$800 to $1,299"
-	  3= "$1,300 to $1,799"
-	  4= "$1,800 to $2,499"
-	  5= "$2,500 to $3,499"
-	  6= "More than $3,500"
+	  1= "$0 to $349"
+	  2= "$350 to $699"
+	  3= "$700 to $1,049"
+	  4= "$1,050 to $1,499"
+	  5= "$1,500 to $2,499"
+	  6= "More than $2,500"
   ;
 	
   value inc_cat
@@ -127,40 +114,10 @@ run;
    set NCHsg.fiveyeartotal_othervacant ;
  run;
 
-proc tabulate data=fiveyeartotal format=comma12. noseps missing;
-  class county2_char;
-  var hhwt_5;
-  table
-    all='Total' county2_char=' ',
-    sum='Sum of HHWTs' * ( hhwt_5='Original 5-year'  )
-  / box='Occupied housing units';
-  *format county2_char county2_char.;
-run;
-
-proc tabulate data=fiveyeartotal_vacant format=comma12. noseps missing;
-  class county2_char;
-  var hhwt_5;
-  table
-    all='Total' county2_char=' ',
-    sum='Sum of HHWTs' * ( hhwt_5='Original 5-year')
-  / box='Vacant (nonseasonal) housing units';
-  *format county2_char county2_char.;
-run;
-
-proc tabulate data=fiveyeartotal_othervacant format=comma12. noseps missing;
-  class county2_char;
-  var hhwt_5;
-  table
-    all='Total' county2_char=' ',
-    sum='Sum of HHWTs' * ( hhwt_5='Original 5-year' )
-  / box='Seasonal vacant housing units';
-  *format county2_char county2_char.;
-run;
-
 proc freq data=fiveyeartotal_othervacant;
 by county2_char;
 tables vacancy /nopercent norow nocol out=other_vacant;
-weight hhwt_5;
+weight hhwt_geo;
 *format county2_char county2_char.;
 run; 
 proc export data=fiveyeartotal_othervacant
@@ -170,26 +127,28 @@ proc export data=fiveyeartotal_othervacant
    run;
 
 /*data set for all units that we can determine cost level*/ 
-data all;
+data all(label= "NC all regular housing units 13-17 pooled");
 	set fiveyeartotal fiveyeartotal_vacant (in=a);
 	if a then inc=6; 
 format inc inc_cat.;
 run; 
 
+proc contents data= all; run;
+
 /*output current households by unit cost catgories by tenure*/
 proc freq data=all;
 tables inc*allcostlevel /nopercent norow nocol out=region_units;
-weight hhwt_5;
+weight hhwt_geo;
 run;
 proc freq data=all;
 tables inc*allcostlevel /nopercent norow nocol out=region_rental;
 where tenure=1;
-weight hhwt_5;
+weight hhwt_geo;
 run;
 proc freq data=all;
 tables inc*allcostlevel /nopercent norow nocol out=region_owner;
 where tenure=2;
-weight hhwt_5;
+weight hhwt_geo;
 run;
 
 	proc transpose data=region_owner prefix=level out=ro;
@@ -282,44 +241,44 @@ var reduced_costb inc costburden tenure reduced_rent rentgrs_a hhincome reduced_
 run; 
 	proc freq data=fiveyeartotal;
 	tables inc*costburden /nofreq nopercent nocol;
-	weight hhwt_5;
+	weight hhwt_geo;
 	title2 "initial cost burden rates";
 	run;
 	proc freq data=fiveyearrandom;
 	tables inc*reduced_costb /nofreq nopercent nocol;
-	weight hhwt_5;
+	weight hhwt_geo;
 	title2 "reduced cost burden rates"; 
 	run;
 
 /*output income distributions by cost for desired cost and cost burden halfway solved*/ 
 proc freq data=fiveyeartotal;
 tables inc*mallcostlevel /nofreq nopercent nocol out=region_desire_byinc;
-weight hhwt_5;
+weight hhwt_geo;
 title2;
 run;
 proc freq data=fiveyeartotal;
 tables inc*mallcostlevel /nofreq nopercent nocol out=region_desire_rent;
-weight hhwt_5;
+weight hhwt_geo;
 where tenure=1;
 run;
 proc freq data=fiveyeartotal;
 tables inc*mallcostlevel /nofreq nopercent nocol out=region_desire_own;
-weight hhwt_5;
+weight hhwt_geo;
 where tenure=2;
 run;
 
 proc freq data=fiveyearrandom;
 tables inc*allcostlevel_halfway /nofreq nopercent nocol out=region_half_byinc;
-weight hhwt_5;
+weight hhwt_geo;
 run;
 proc freq data=fiveyearrandom;
 tables inc*allcostlevel_halfway /nofreq nopercent nocol out=region_half_rent;
-weight hhwt_5;
+weight hhwt_geo;
 where tenure=1;
 run;
 proc freq data=fiveyearrandom;
 tables inc*allcostlevel_halfway /nofreq nopercent nocol out=region_half_own;
-weight hhwt_5;
+weight hhwt_geo;
 where tenure=2; 
 run;
 data rdesire_half_byinc ;
@@ -376,10 +335,10 @@ by county2_char;
 proc freq data=all;
 by county2_char;
 tables inc*allcostlevel /nopercent norow nocol out=Allgeo;
-weight hhwt_5;
+weight hhwt_geo;
 *format county2_char county2_char.;
 run;
-	proc transpose data=Allgeo out=geo_u prefix=level;;
+	proc transpose data=Allgeo out=geo_u prefix=level;
 	by county2_char inc;
 	var count;
 
@@ -389,10 +348,10 @@ proc freq data=all;
 by county2_char;
 tables inc*allcostlevel /nopercent norow nocol out=allgeo_rent;
 where tenure=1;
-weight hhwt_5;
+weight hhwt_geo;
 *format county2_char county2_char.;
 run;
-	proc transpose data=allgeo_rent out=geo_r prefix=level;;
+	proc transpose data=allgeo_rent out=geo_r prefix=level;
 	by county2_char inc;
 	var count;
 
@@ -402,10 +361,10 @@ proc freq data=all;
 by county2_char;
 tables inct*allcostlevel /nopercent norow nocol out=allgeo_own;
 where tenure=2;
-weight hhwt_5;
+weight hhwt_geo;
 *format county2_char county2_char.;
 run;
-	proc transpose data=allgeo_own out=geo_o prefix=level;;
+	proc transpose data=allgeo_own out=geo_o prefix=level;
 	by county2_char inc;
 	var count;
 
@@ -426,7 +385,7 @@ by county2_char;
 proc freq data=fiveyeartotal;
 by county2_char;
 tables inc*mallcostlevel /nopercent norow nocol out=geo_desire;
-weight hhwt_5;
+weight hhwt_geo;
 *format county2_char county2_char. mallcostlevel;
 run;
 	proc transpose data=geo_desire out=geo_d
@@ -439,7 +398,7 @@ run;
 proc freq data=fiveyeartotal;
 by county2_char;
 tables inc*mallcostlevel /nopercent norow nocol out=geo_desire_rent;
-weight hhwt_5;
+weight hhwt_geo;
 where tenure=1 ;
 *format county2_char county2_char. mallcostlevel;
 run;
@@ -453,7 +412,7 @@ run;
 proc freq data=fiveyeartotal;
 by county2_char;
 tables inc*mallcostlevel /nopercent norow nocol out=geo_desire_own;
-weight hhwt_5;
+weight hhwt_geo;
 where tenure=2 ;
 *format county2_char county2_char. mallcostlevel;
 run;
@@ -477,7 +436,7 @@ by county2_char;
 proc freq data=fiveyearrandom;
 by county2_char;
 tables inc*allcostlevel_halfway /nofreq nopercent nocol out=geo_half_byinc;
-weight hhwt_5;
+weight hhwt_geo;
 
 *format county2_char county2_char. allcostlevel_halfway;
 run;
@@ -490,7 +449,7 @@ proc transpose data=geo_half_byinc out=geo_half
 proc freq data=fiveyearrandom;
 by county2_char;
 tables inc*allcostlevel_halfway /nofreq nopercent nocol out=geo_half_rent;
-weight hhwt_5;
+weight hhwt_geo;
 where tenure=1; 
 *format county2_char county2_char. allcostlevel_halfway;
 run;
@@ -503,7 +462,7 @@ proc transpose data=geo_half_rent out=geo_halfr
 proc freq data=fiveyearrandom;
 by county2_char;
 tables inc*allcostlevel_halfway /nofreq nopercent nocol out=geo_half_own;
-weight hhwt_5;
+weight hhwt_geo;
 where tenure=2; 
 *format county2_char county2_char. allcostlevel_halfway;
 run;

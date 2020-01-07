@@ -47,30 +47,30 @@ proc format;
 	;
 
   value rcost
-	  1= "$0 to $749"
-	  2= "$750 to $1,199"
-	  3= "$1,200 to $1,499"
-	  4= "$1,500 to $1,999"
-	  5= "$2,000 to $2,499"
+	  1= "$0 to $349"
+	  2= "$350 to $699"
+	  3= "$700 to $1,049"
+	  4= "$1,050 to $1,499"
+	  5= "$1,500 to $2,499"
 	  6= "More than $2,500"
   ;
 
   value ocost
-	  1= "$0 to $1,199"
-	  2= "$1,200 to $1,799"
-	  3= "$1,800 to $2,499"
-	  4= "$2,500 to $3,199"
-	  5= "$3,200 to $4,199"
-	  6= "More than $4,200"
+	  1= "$0 to $349"
+	  2= "$350 to $699"
+	  3= "$700 to $1,049"
+	  4= "$1,050 to $1,499"
+	  5= "$1,500 to $2,499"
+	  6= "More than $2,500"
   ;
 
   value acost
-	  1= "$0 to $799"
-	  2= "$800 to $1,299"
-	  3= "$1,300 to $1,799"
-	  4= "$1,800 to $2,499"
-	  5= "$2,500 to $3,499"
-	  6= "More than $3,500"
+	  1= "$0 to $349"
+	  2= "$350 to $699"
+	  3= "$700 to $1,049"
+	  4= "$1,050 to $1,499"
+	  5= "$1,500 to $2,499"
+	  6= "More than $2,500"
   ;
 	
   value inc_cat
@@ -92,7 +92,7 @@ proc format;
   	
   value afford
 
-  1= 'natural affordable (rent < $750)'
+  1= 'natural affordable (rent < $700)'
   0= 'not natural affordable'; 
 run;
 
@@ -417,8 +417,8 @@ if UNITSSTR in (08, 09, 10) then structure=3;
 		
 	if rentgrs in ( 9999999, .n , . ) then affordable=.;
 		else do; 
-		    if rentgrs_a<750 then affordable=1;
-			else if rentgrs_a>=750 then affordable=0;
+		    if rentgrs_a<700 then affordable=1;
+			else if rentgrs_a>=700 then affordable=0;
 			
 		end;
 
