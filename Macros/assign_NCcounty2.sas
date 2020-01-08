@@ -27,7 +27,7 @@
     when ("37067") 
       county2 ="1801 to 1803";
     when ("37021") 
-      county2 ="2201 or 2202";
+      county2 ="2201 to 2202";
     when ("37071") 
       county2 ="3001 to 3003";
     when ("37119") 

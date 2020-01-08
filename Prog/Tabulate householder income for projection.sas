@@ -11,7 +11,7 @@
  ACS IPUMS data for NC:
 
  Modifications: 8/16/19 based on Steven's new race and place categories
-
+                1/3/20 YS removed afact weights
 **************************************************************************/
 
 %include "L:\SAS\Inc\StdLocal.sas";
@@ -20,7 +20,7 @@
 %DCData_lib( NCHsg)
 %DCData_lib( Ipums)
 
-%let date=12072019;
+%let date=01032020;
 
 proc format;
 
@@ -133,13 +133,13 @@ run;
 %householdinfo(2016);
 %householdinfo(2017);
 
-%macro tabulateinc(year);
+*%macro tabulateinc(year);
 /*tabulate deciles of income for state by year*/
-proc univariate data= Householddetail_&year.;
+/*proc univariate data= Householddetail_&year.;
 	var  hhincome_a;
 	weight hhwt;
 	output out= inc_&year. pctlpre= P_ pctlpts= 10 to 100 by 10 ;
-run;  /*by nature of this function, the output dataset is named data1, data2, data3...*/
+run;  
 
 data inc_&year._2;
 set inc_&year.;
@@ -158,14 +158,34 @@ run;
 %tabulateinc(2014);
 %tabulateinc(2015);
 %tabulateinc(2016);
-%tabulateinc(2017);
+%tabulateinc(2017);*/
 
-/*compile 13-17 data for tabulation */
-data fiveyeartotal;
-set Householddetail_2013_inc  Householddetail_2014_inc Householddetail_2015_inc Householddetail_2016_inc Householddetail_2017_inc;
+data fiveyeartotal1;
+set Householddetail_2013  Householddetail_2014 Householddetail_2015 Householddetail_2016 Householddetail_2017;
 totalpop=0.2;
-totpop_wt= totalpop*AFACT2; 
+merge=1;
+*totpop_wt= totalpop*AFACT2; /*remove afact weights*/
+run;
 
+proc univariate data= fiveyeartotal1;
+	var  hhincome_a;
+	weight hhwt;
+	output out= inc_pooled pctlpre= P_ pctlpts= 10 to 100 by 10 ;
+run;  /*by nature of this function, the output dataset is named data1, data2, data3...*/
+
+data inc_pooled2;
+set inc_pooled;
+merge= 1;
+run;
+
+data fiveyeartotal2;
+	merge fiveyeartotal1(in=a) inc_pooled2;
+	if a;
+	by merge ;
+run;
+
+data fiveyeartotal;
+set fiveyeartotal2;
 if hhincome_a in ( 9999999, .n ) then inc = .n;
   else do;
  /*assign income category based on each year's HH income quintile*/
@@ -180,8 +200,30 @@ if hhincome_a in ( 9999999, .n ) then inc = .n;
 		if P_80  =< hhincome_a < P_90 then inc=9;
 		if P_90  =< hhincome_a =< P_100 then inc=10;
   end;
-
 run;
+
+/*compile 13-17 data for tabulation, this part is now moved after five years of data is compiled to calculate the pooled income quintile*/
+/*data fiveyeartotal;
+set Householddetail_2013_inc  Householddetail_2014_inc Householddetail_2015_inc Householddetail_2016_inc Householddetail_2017_inc;
+totalpop=0.2;
+totpop_wt= totalpop*AFACT2; 
+
+if hhincome_a in ( 9999999, .n ) then inc = .n;
+  else do;*/
+ /*assign income category based on each year's HH income quintile*/
+		/*if hhincome_a < P_10 then inc=1;
+		if P_10  =< hhincome_a < P_20 then inc=2;
+		if P_20  =< hhincome_a < P_30 then inc=3;
+		if P_30  =< hhincome_a < P_40 then inc=4;
+		if P_40  =< hhincome_a < P_50 then inc=5;
+		if P_50  =< hhincome_a < P_60 then inc=6;
+		if P_60  =< hhincome_a < P_70 then inc=7;
+		if P_70  =< hhincome_a < P_80 then inc=8;
+		if P_80  =< hhincome_a < P_90 then inc=9;
+		if P_90  =< hhincome_a =< P_100 then inc=10;
+  end;
+
+run;*/
 
 /****by NC analysis geography categories county2 (most of them are counties but if multiple counties are in each PUMA it is summarized by PUMA)****/
 proc sort data=fiveyeartotal;
@@ -190,7 +232,7 @@ run;
 
 proc summary data=fiveyeartotal;
 class county2_char agegroup race1 inc;
-	var totpop_wt;
+	var totalpop;
 	weight hhwt;
 	output out = Householderbreakdown_NC(where=(_TYPE_=15)) sum=;
 	format race1 racenew. agegroup agegroupnew. ;
@@ -203,7 +245,7 @@ run;
 proc transpose data=Householderbreakdown_NC out=NCdistribution;
 by county2_char agegroup race1 ;
 id inc;
-var totpop_wt;
+var totalpop;
 run;
 proc stdize data=NCdistribution out=NCdistribution_2 reponly missing=0;
    var _1 _2 _3 _4 _5 _6 _7 _8 _9 _10;
@@ -244,7 +286,7 @@ run;
 
 proc summary data=fiveyeartotal;
 class agegroup race1 inc;
-	var totpop_wt;
+	var totalpop;
 	weight hhwt;
 	output out = Householderbreakdown (where=(_TYPE_=7)) sum=;
 	format race1 racenew. agegroup agegroupnew. ;
@@ -257,7 +299,7 @@ run;
 proc transpose data=Householderbreakdown out=distribution;
 by agegroup race1;
 id inc;
-var totpop_wt;
+var totalpop;
 run;
 proc stdize data=distribution out=distribution_2 reponly missing=0;
    var _1 _2 _3 _4 _5 _6 _7 _8 _9 _10;
