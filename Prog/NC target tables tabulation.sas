@@ -97,7 +97,7 @@ proc format;
   	
   value afford
 
-  1= 'natural affordable (rent < $750)'
+  1= 'natural affordable (rent < $700)'
   0= 'not natural affordable'; 
 run;
 

@@ -54,7 +54,7 @@ proc format;
     6 = 'More than 200%'
 	;
 
-  value tenure
+ value tenure
     1 = 'Renter units'
     2 = 'Owner units'
 	;
@@ -106,7 +106,7 @@ proc format;
   	  
 	  value afford
 
-  1= 'natural affordable (rent < $750)'
+  1= 'natural affordable (rent < $70)'
   0= 'not natural affordable';
 run;
 

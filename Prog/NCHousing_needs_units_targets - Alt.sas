@@ -663,16 +663,17 @@ by hud_inc /*tenure*/;
 run;
 
 proc summary data= fiveyeartotal1;
-by hud_inc tenure;
+by hud_inc /*tenure*/;
 var costratio HHincome_a;
 output out= costratio_hudinc mean=;
 run;
 
 proc summary data= fiveyeartotal1;
-by hud_inc tenure;
+by hud_inc /*tenure*/;
 var HHincome_a owncost_a rentgrs_a;
 output out= incomecategories mean=;
 run;
+
 /*calibrate ipums to 2015 population projection*/ 
 proc sort data= fiveyeartotal1;
 by geoid;
@@ -707,33 +708,16 @@ label hhwt_geo="Household Weight Calibrated to Steven Estimates for Households"
 
 run; 
 
-proc univariate data= fiveyeartotal_c;
-	var  hhincome_a;
-	weight hhwt_geo;
-	output out= inc_pooled pctlpre= P_ pctlpts= 10 to 100 by 10 ;
-run;  /*by nature of this function, the output dataset is named data1, data2, data3...*/
-
-data inc_pooled2;
-set inc_pooled;
-merge= 1;
-run;
-
-data fiveyeartotal2;
-	merge fiveyeartotal_c(in=a) inc_pooled2;
-	if a;
-	by merge ;
-run;
-
 data fiveyeartotal;
-set fiveyeartotal2;
+set fiveyeartotal_c;
 if hhincome_a in ( 9999999, .n ) then inc = .n;
   else do;
- /*assign income category based on each year's HH income quintile*/
-		if hhincome_a < P_20 then inc=1;
-		if P_20  =< hhincome_a < P_40 then inc=2;
-		if P_40  =< hhincome_a < P_60 then inc=3;
-		if P_60  =< hhincome_a < P_80 then inc=4;
-		if P_80  =< hhincome_a < P_100 then inc=5;
+ /*hard code income categories to match the projections, since the calibrated distributino might be slightly different than the original one*/
+		if hhincome_a < 20728.563641 then inc=1;
+		if 20728.563641  =< hhincome_a < 39142.262306 then inc=2;
+		if 39142.262306  =< hhincome_a < 62051.245269 then inc=3;
+		if 62051.245269  =< hhincome_a < 100000 then inc=4;
+		if 100000  =< hhincome_a < 1570000 then inc=5;
   end;
 	    label /*hud_inc = 'HUD Income Limits category for household (2016)'*/
 	    inc='Income quintiles statewide not account for HH size';
@@ -943,7 +927,7 @@ weight hhwt_geo;
 *format county2_char county2_char.;
 run; 
 
-proc export data=fiveyeartotal_othervacant;
+proc export data=fiveyeartotal_othervacant
  	outfile="&_dcdata_default_path\NCHsg\Prog\other_vacant_&date..csv"
    dbms=csv
    replace;
