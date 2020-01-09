@@ -32,7 +32,7 @@
 %DCData_lib( NCHsg )
 %DCData_lib( Ipums )
 
-%let date=12312019; 
+%let date=01092020; 
 
 proc format;
 
@@ -100,18 +100,34 @@ proc format;
   1= 'natural affordable (rent < $700)'
   0= 'not natural affordable'; 
 run;
+data categories;
+set NCHsg.Pumacategories;
+run;
 
 /*read in dataset created by NCHousing_needs_units_targets.sas*/
 data fiveyeartotal;
 	set NCHsg.fiveyeartotal ;
+	drop County;
+	by county2_char;
+	retain group 0;
+	if first.county2_char then group=group+1;
 run;
+
 
  data fiveyeartotal_vacant; 
    set NCHsg.fiveyeartotal_vacant;
+	drop County;
+	by county2_char;
+	retain group 0;
+	if first.county2_char then group=group+1;
  run;
 
  data fiveyeartotal_othervacant; 
    set NCHsg.fiveyeartotal_othervacant ;
+	drop County;
+	by county2_char;
+	retain group 0;
+	if first.county2_char then group=group+1;
  run;
 
 proc freq data=fiveyeartotal_othervacant;
@@ -125,6 +141,136 @@ proc export data=fiveyeartotal_othervacant
    dbms=csv
    replace;
    run;
+
+/*tabulate percent cost burdened by category and income quintiles*/
+data fiveyeartotal_cat;
+merge fiveyeartotal(in=a) categories;
+if a;
+by group ;
+run;
+
+proc freq data=fiveyeartotal_cat;
+tables Category*costburden /nopercent norow nocol out=costburden_group;
+weight hhwt_geo;
+run;
+
+proc freq data=fiveyeartotal_cat;
+tables Category*costburden*inc /nopercent norow nocol out=costburden_incgroup;
+weight hhwt_geo;
+run;
+
+proc transpose data=costburden_incgroup prefix=count out=costburden_incgroup2;
+by Category costburden;
+ID inc;
+var count;
+run;
+
+proc transpose data=costburden_incgroup2 prefix=count out=costburden_incgroup3;
+by Category;
+ID costburden;
+var count20_percentile count40_percentile count60_percentile count80_percentile count100_percentile;
+run;
+
+data costburden_incgroup4;
+set costburden_incgroup3;
+pctburdened= count1/(count0+count1);
+run;
+
+proc transpose data=costburden_incgroup4 prefix=count out=costburden_incgroup5;
+by Category;
+ID _NAME_;
+var pctburdened;
+run;
+
+proc export data=costburden_incgroup5
+ 	outfile="&_dcdata_default_path\NCHsg\Prog\costburden_incgroup_&date..csv"
+   dbms=csv
+   replace;
+   run;
+
+proc summary data = costburden_incgroup4;
+class _NAME_;
+var count0 count1 ;
+output out= inccat sum=;
+run;
+data inccat2;
+set inccat;
+pctburdened= count1/(count0+count1);
+run;
+proc transpose data=inccat2 prefix=count out=inccat3;
+by _TYPE_;
+ID _NAME_;
+var pctburdened;
+run;
+
+proc export data=inccat3
+ 	outfile="&_dcdata_default_path\NCHsg\Prog\inccat_total_&date..csv"
+   dbms=csv
+   replace;
+   run;
+
+
+/*monthly housing cost by classifications*/
+data monthlycost;
+set Fiveyeartotal_cat;
+cost= costratio* hhincome_a/12;
+keep county2_char group County_FIPS County Category cost hhwt_geo;
+run;
+
+proc summary data= monthlycost;
+class county2_char group Category;
+var cost;
+weight hhwt_geo;
+output out= monthlycost2(where= (_TYPE_=7)) mean=;
+run;
+
+proc export data=monthlycost2
+ 	outfile="&_dcdata_default_path\NCHsg\Prog\housingcost_cat_&date..csv"
+   dbms=csv
+   replace;
+   run;
+
+/*cost by structure type*/
+proc summary data= Fiveyeartotal_cat;
+class allcostlevel structure;
+var total;
+weight hhwt_geo;
+output out= structurecost(where= (_TYPE_=3)) sum=;
+run;
+
+proc sort data= structurecost;
+by structure;
+run;
+
+proc transpose data=structurecost out=structurecost2;
+by structure ;
+ID allcostlevel;
+var total;
+run;
+
+proc export data=structurecost2
+ 	outfile="&_dcdata_default_path\NCHsg\Prog\structure_cost_&date..csv"
+   dbms=csv
+   replace;
+   run;
+
+
+
+
+
+
+
+
+
+
+
+proc summary data=fiveyeartotal;
+class county2_char agegroup race1 inc;
+	var totalpop;
+	weight hhwt;
+	output out = Householderbreakdown_NC(where=(_TYPE_=15)) sum=;
+	format race1 racenew. agegroup agegroupnew. ;
+run;
 
 /*data set for all units that we can determine cost level*/ 
 data all(label= "NC all regular housing units 13-17 pooled");
