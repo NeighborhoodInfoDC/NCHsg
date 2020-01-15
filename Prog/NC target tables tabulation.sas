@@ -209,23 +209,70 @@ proc export data=inccat3
    replace;
    run;
 
-
 /*monthly housing cost by classifications*/
 data monthlycost;
 set Fiveyeartotal_cat;
 cost= costratio* hhincome_a/12;
 keep county2_char group County_FIPS County Category cost hhwt_geo;
 run;
-
+/*
 proc summary data= monthlycost;
 class county2_char group Category;
 var cost;
 weight hhwt_geo;
 output out= monthlycost2(where= (_TYPE_=7)) mean=;
 run;
+*/
 
+proc freq data=Fiveyeartotal_cat;
+tables Category*allcostlevel /nofreq nopercent nocol out=allcostcat;
+weight hhwt_geo;
+run;
+proc freq data=Fiveyeartotal_cat;
+tables allcostlevel /nofreq nopercent nocol out=allcostcat2;
+weight hhwt_geo;
+run;
+proc freq data=Fiveyeartotal_cat;
+tables group*allcostlevel /nofreq nopercent nocol out=allcostcat3;
+weight hhwt_geo;
+run;
+proc freq data=Fiveyeartotal_cat;
+tables group /nofreq nopercent nocol out=allcostcat4;
+weight hhwt_geo;
+run;
+
+data allcostcat5;
+set allcostcat4;
+total= COUNT;
+drop COUNT PERCENT;
+run;
+data allcostcat6 ;
+	merge allcostcat3(in=a) allcostcat5;
+	if a;
+	by group ;
+	run;
+
+
+/*
 proc export data=monthlycost2
  	outfile="&_dcdata_default_path\NCHsg\Prog\housingcost_cat_&date..csv"
+   dbms=csv
+   replace;
+   run;
+*/
+proc export data=allcostcat
+ 	outfile="&_dcdata_default_path\NCHsg\Prog\allcost_cat_&date..csv"
+   dbms=csv
+   replace;
+   run;
+
+proc export data=allcostcat2
+ 	outfile="&_dcdata_default_path\NCHsg\Prog\allcost_all_&date..csv"
+   dbms=csv
+   replace;
+   run;
+proc export data=allcostcat6(drop=PERCENT)
+ 	outfile="&_dcdata_default_path\NCHsg\Prog\allcost_county2_&date..csv"
    dbms=csv
    replace;
    run;
@@ -254,11 +301,28 @@ proc export data=structurecost2
    replace;
    run;
 
+proc freq data=Fiveyeartotal_cat;
+tables Category*structure /nofreq nopercent nocol out=structurecat;
+weight hhwt_geo;
+run;
 
+proc export data=structurecat
+ 	outfile="&_dcdata_default_path\NCHsg\Prog\structure_cat_&date..csv"
+   dbms=csv
+   replace;
+   run;
 
-
-
-
+proc summary data= Fiveyeartotal_cat;
+class group structure;
+weight hhwt_geo;
+var total;
+output out=county_structure(where= (_TYPE_=3)) sum=;
+run;
+proc export data=county_structure
+ 	outfile="&_dcdata_default_path\NCHsg\Prog\structure_county_&date..csv"
+   dbms=csv
+   replace;
+   run;
 
 
 
