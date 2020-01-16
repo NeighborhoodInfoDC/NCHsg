@@ -49,8 +49,8 @@ proc format;
   value rcost
 	  1= "$0 to $349"
 	  2= "$350 to $699"
-	  3= "$700 to $1,049"
-	  4= "$1,050 to $1,499"
+	  3= "$700 to $999"
+	  4= "$1,000 to $1,499"
 	  5= "$1,500 to $2,499"
 	  6= "More than $2,500"
   ;
@@ -58,8 +58,8 @@ proc format;
   value ocost
 	  1= "$0 to $349"
 	  2= "$350 to $699"
-	  3= "$700 to $1,049"
-	  4= "$1,050 to $1,499"
+	  3= "$700 to $999"
+	  4= "$1,000 to $1,499"
 	  5= "$1,500 to $2,499"
 	  6= "More than $2,500"
   ;
@@ -67,8 +67,8 @@ proc format;
   value acost
 	  1= "$0 to $349"
 	  2= "$350 to $699"
-	  3= "$700 to $1,049"
-	  4= "$1,050 to $1,499"
+	  3= "$700 to $999"
+	  4= "$1,000 to $1,499"
 	  5= "$1,500 to $2,499"
 	  6= "More than $2,500"
   ;
@@ -262,16 +262,16 @@ data Housing_needs_baseline_&year._3;
 			rentlevel=.;
 			if 0 <=rentgrs_a<350 then rentlevel=1;  /*~~12831(mean inc for 30%AMI 4 person HH renters)/12*0.3 */
 			if 350 <=rentgrs_a<700 then rentlevel=2;
-			if 700 <=rentgrs_a<1050 then rentlevel=3;
-			if 1050 <=rentgrs_a<1550 then rentlevel=4;
+			if 700 <=rentgrs_a<1000 then rentlevel=3;
+			if 1000 <=rentgrs_a<1550 then rentlevel=4;
 			if 1550 <=rentgrs_a<2400 then rentlevel=5;
 			if rentgrs_a >= 2400 then rentlevel=6;
 
 			mrentlevel=.;
 			if max_rent<350 then mrentlevel=1;
 			if 350 <=max_rent<700 then mrentlevel=2;
-			if 700 <=max_rent<1050 then mrentlevel=3;
-			if 1050 <=max_rent<1550 then mrentlevel=4;
+			if 700 <=max_rent<1000 then mrentlevel=3;
+			if 1000 <=max_rent<1550 then mrentlevel=4;
 			if 1550 <=max_rent<2400 then mrentlevel=5;
 			if max_rent >= 2400 then mrentlevel=6;
 
@@ -280,8 +280,8 @@ data Housing_needs_baseline_&year._3;
 			allcostlevel=.;
 			if rentgrs_a<350 then allcostlevel=1;  /*~~13242(mean inc for 30%AMI 4 person HH renters and ower)/12*0.3 */
 			if 350 <=rentgrs_a<700 then allcostlevel=2;
-			if 700 <=rentgrs_a<1050 then allcostlevel=3;
-			if 1050 <=rentgrs_a<1500 then allcostlevel=4;
+			if 700 <=rentgrs_a<1000 then allcostlevel=3;
+			if 1000 <=rentgrs_a<1500 then allcostlevel=4;
 			if 1500 <=rentgrs_a<2500 then allcostlevel=5;
 			if rentgrs_a >= 2500 then allcostlevel=6; 
 
@@ -294,8 +294,8 @@ data Housing_needs_baseline_&year._3;
 
 				if max_rent<350 then mallcostlevel=1;
 				if 350 <=max_rent<700 then mallcostlevel=2;
-				if 700 <=max_rent<1050 then mallcostlevel=3;
-				if 1050 <=max_rent<1500 then mallcostlevel=4;
+				if 700 <=max_rent<1000 then mallcostlevel=3;
+				if 1000 <=max_rent<1500 then mallcostlevel=4;
 				if 1500 <=max_rent<2500 then mallcostlevel=5;
 				if max_rent >= 2500 then mallcostlevel=6;
 
@@ -305,8 +305,8 @@ data Housing_needs_baseline_&year._3;
 
 				if rentgrs_a<350 then mallcostlevel=1;
 				if 350 <=rentgrs_a<700 then mallcostlevel=2;
-				if 700 <=rentgrs_a<1050 then mallcostlevel=3;
-				if 1050 <=rentgrs_a<1500 then mallcostlevel=4;
+				if 700 <=rentgrs_a<1000 then mallcostlevel=3;
+				if 1000 <=rentgrs_a<1500 then mallcostlevel=4;
 				if 1500 <=rentgrs_a<2500 then mallcostlevel=5;
 				if rentgrs_a >= 2500 then mallcostlevel=6;
 
@@ -367,16 +367,16 @@ data Housing_needs_baseline_&year._3;
 		ownlevel=.;
 			if 0 <=total_month<350 then ownlevel=1;
 			if 350 <=total_month<700 then ownlevel=2;
-			if 700 <=total_month<1050 then ownlevel=3;
-			if 1050 <=total_month<1500 then ownlevel=4;
+			if 700 <=total_month<1000 then ownlevel=3;
+			if 1000 <=total_month<1500 then ownlevel=4;
 			if 1500 <=total_month<2500 then ownlevel=5;
 			if total_month >= 2500 then ownlevel=6;
 
 		mownlevel=.;
 			if max_ocost<350 then mownlevel=1;
 			if 350 <=max_ocost<700 then mownlevel=2;
-			if 700 <=max_ocost<1050 then mownlevel=3;
-			if 1050 <=max_ocost<1500 then mownlevel=4;
+			if 700 <=max_ocost<1000 then mownlevel=3;
+			if 1000 <=max_ocost<1500 then mownlevel=4;
 			if 1500 <=max_ocost<2500 then mownlevel=5;
 			if max_ocost >= 2500 then mownlevel=6;
 
@@ -385,16 +385,16 @@ data Housing_needs_baseline_&year._3;
 			allcostlevel=.;
 			if total_month<350 then allcostlevel=1;
 			if 350 <=total_month<700 then allcostlevel=2;
-			if 700 <=total_month<1050 then allcostlevel=3;
-			if 1050 <=total_month<1500 then allcostlevel=4;
+			if 700 <=total_month<1000 then allcostlevel=3;
+			if 1000 <=total_month<1500 then allcostlevel=4;
 			if 1500 <=total_month<2500 then allcostlevel=5;
 			if total_month >= 2500 then allcostlevel=6; 
 
 				mallcostlevel=.;
 			if max_ocost<350 then mallcostlevel=1;
 			if 350 <=max_ocost<700 then mallcostlevel=2;
-			if 700 <=max_ocost<1050 then mallcostlevel=3;
-			if 1050 <=max_ocost<1500 then mallcostlevel=4;
+			if 700 <=max_ocost<1000 then mallcostlevel=3;
+			if 1000 <=max_ocost<1500 then mallcostlevel=4;
 			if 1500 <=max_ocost<2500 then mallcostlevel=5;
 			if max_ocost >= 2500 then mallcostlevel=6;
 
@@ -476,8 +476,8 @@ data Housing_needs_vacant_&year. Other_vacant_&year. ;
 		rentlevel=.;
 		if 0 <=rentgrs_a<350 then rentlevel=1;
 		if 350 <=rentgrs_a<700 then rentlevel=2;
-		if 700 <=rentgrs_a<1050 then rentlevel=3;
-		if 1050 <=rentgrs_a<1500 then rentlevel=4;
+		if 700 <=rentgrs_a<1000 then rentlevel=3;
+		if 1000 <=rentgrs_a<1500 then rentlevel=4;
 		if 1500 <=rentgrs_a<2500 then rentlevel=5;
 		if rentgrs_a >= 2500 then rentlevel=6;
 
@@ -485,8 +485,8 @@ data Housing_needs_vacant_&year. Other_vacant_&year. ;
 				allcostlevel=.;
 				if rentgrs_a<350 then allcostlevel=1;
 				if 350 <=rentgrs_a<700 then allcostlevel=2;
-				if 700 <=rentgrs_a<1050 then allcostlevel=3;
-				if 1050 <=rentgrs_a<1500 then allcostlevel=4;
+				if 700 <=rentgrs_a<1000 then allcostlevel=3;
+				if 1000 <=rentgrs_a<1500 then allcostlevel=4;
 				if 1500 <=rentgrs_a<2500 then allcostlevel=5;
 				if rentgrs_a >= 2500 then allcostlevel=6;
 	  end;
@@ -520,8 +520,8 @@ data Housing_needs_vacant_&year. Other_vacant_&year. ;
 			ownlevel=.;
 				if 0 <=total_month<350 then ownlevel=1;
 				if 350 <=total_month<700 then ownlevel=2;
-				if 700 <=total_month<1050 then ownlevel=3;
-				if 1050 <=total_month<1500 then ownlevel=4;
+				if 700 <=total_month<1000 then ownlevel=3;
+				if 1000 <=total_month<1500 then ownlevel=4;
 				if 1500 <=total_month<2500 then ownlevel=5;
 				if total_month >= 2500 then ownlevel=6;
 			
@@ -529,8 +529,8 @@ data Housing_needs_vacant_&year. Other_vacant_&year. ;
 				allcostlevel=.;
 				if total_month<350 then allcostlevel=1;
 				if 350 <=total_month<700 then allcostlevel=2;
-				if 700 <=total_month<1050 then allcostlevel=3;
-				if 1050 <=total_month<1500 then allcostlevel=4;
+				if 700 <=total_month<1000 then allcostlevel=3;
+				if 1000 <=total_month<1500 then allcostlevel=4;
 				if 1500 <=total_month<2500 then allcostlevel=5;
 				if total_month >= 2500 then allcostlevel=6; 
 
