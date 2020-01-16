@@ -32,7 +32,7 @@
 %DCData_lib( NCHsg )
 %DCData_lib( Ipums )
 
-%let date=01092020; 
+%let date=01152020; 
 
 proc format;
 
@@ -54,8 +54,8 @@ proc format;
  value rcost
 	  1= "$0 to $349"
 	  2= "$350 to $699"
-	  3= "$700 to $1,049"
-	  4= "$1,050 to $1,499"
+	  3= "$700 to $999"
+	  4= "$1,000 to $1,499"
 	  5= "$1,500 to $2,499"
 	  6= "More than $2,500"
   ;
@@ -63,8 +63,8 @@ proc format;
   value ocost
 	  1= "$0 to $349"
 	  2= "$350 to $699"
-	  3= "$700 to $1,049"
-	  4= "$1,050 to $1,499"
+	  3= "$700 to $999"
+	  4= "$1,000 to $1,499"
 	  5= "$1,500 to $2,499"
 	  6= "More than $2,500"
   ;
@@ -72,8 +72,8 @@ proc format;
   value acost
 	  1= "$0 to $349"
 	  2= "$350 to $699"
-	  3= "$700 to $1,049"
-	  4= "$1,050 to $1,499"
+	  3= "$700 to $999"
+	  4= "$1,000 to $1,499"
 	  5= "$1,500 to $2,499"
 	  6= "More than $2,500"
   ;
@@ -107,7 +107,6 @@ run;
 /*read in dataset created by NCHousing_needs_units_targets.sas*/
 data fiveyeartotal;
 	set NCHsg.fiveyeartotal ;
-	drop County;
 	by county2_char;
 	retain group 0;
 	if first.county2_char then group=group+1;
@@ -116,7 +115,6 @@ run;
 
  data fiveyeartotal_vacant; 
    set NCHsg.fiveyeartotal_vacant;
-	drop County;
 	by county2_char;
 	retain group 0;
 	if first.county2_char then group=group+1;
@@ -124,7 +122,6 @@ run;
 
  data fiveyeartotal_othervacant; 
    set NCHsg.fiveyeartotal_othervacant ;
-	drop County;
 	by county2_char;
 	retain group 0;
 	if first.county2_char then group=group+1;
