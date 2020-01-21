@@ -101,7 +101,7 @@ proc format;
   0= 'not natural affordable'; 
 run;
 data categories;
-set NCHsg.Pumacategories;
+set NCHsg.Puma_categories_121;
 run;
 
 /*read in dataset created by NCHousing_needs_units_targets.sas*/
@@ -247,7 +247,20 @@ data allcostcat6 ;
 	merge allcostcat3(in=a) allcostcat5;
 	if a;
 	by group ;
+	percent= COUNT/total;
 	run;
+
+proc transpose data= allcostcat6 out=allcostcat7;
+by group;
+ID allcostlevel;
+var percent;
+run;
+
+proc transpose data=structurecost out=structurecost2;
+by structure ;
+ID allcostlevel;
+var total;
+run;
 
 
 /*
@@ -268,7 +281,7 @@ proc export data=allcostcat2
    dbms=csv
    replace;
    run;
-proc export data=allcostcat6(drop=PERCENT)
+proc export data=allcostcat7
  	outfile="&_dcdata_default_path\NCHsg\Prog\allcost_county2_&date..csv"
    dbms=csv
    replace;
@@ -303,7 +316,13 @@ tables Category*structure /nofreq nopercent nocol out=structurecat;
 weight hhwt_geo;
 run;
 
-proc export data=structurecat
+proc transpose data=structurecat out=structurecat2;
+by category;
+ID structure;
+var COUNT;
+run;
+
+proc export data=structurecat2
  	outfile="&_dcdata_default_path\NCHsg\Prog\structure_cat_&date..csv"
    dbms=csv
    replace;
@@ -315,7 +334,15 @@ weight hhwt_geo;
 var total;
 output out=county_structure(where= (_TYPE_=3)) sum=;
 run;
-proc export data=county_structure
+
+proc transpose data=county_structure out=county_structure2;
+by group;
+ID structure;
+var total;
+run;
+
+
+proc export data=county_structure2
  	outfile="&_dcdata_default_path\NCHsg\Prog\structure_county_&date..csv"
    dbms=csv
    replace;
