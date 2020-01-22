@@ -106,12 +106,11 @@ run;
 
 /*read in dataset created by NCHousing_needs_units_targets.sas*/
 data fiveyeartotal;
-	set NCHsg.fiveyeartotal ;
+	set NCHsg.fiveyeartotal (drop= County) ;
 	by county2_char;
 	retain group 0;
 	if first.county2_char then group=group+1;
 run;
-
 
  data fiveyeartotal_vacant; 
    set NCHsg.fiveyeartotal_vacant;
@@ -193,6 +192,7 @@ run;
 data inccat2;
 set inccat;
 pctburdened= count1/(count0+count1);
+total= count0+count1;
 run;
 proc transpose data=inccat2 prefix=count out=inccat3;
 by _TYPE_;
@@ -202,6 +202,22 @@ run;
 
 proc export data=inccat3
  	outfile="&_dcdata_default_path\NCHsg\Prog\inccat_total_&date..csv"
+   dbms=csv
+   replace;
+   run;
+
+proc summary data = costburden_incgroup4;
+class Category;
+var count0 count1 ;
+output out= burden_cat sum=;
+run;
+data burden_cat2;
+set burden_cat;
+pctburdened= count1/(count0+count1);
+total= count0+count1;
+run;
+proc export data=burden_cat2
+ 	outfile="&_dcdata_default_path\NCHsg\Prog\burden_cat_&date..csv"
    dbms=csv
    replace;
    run;
