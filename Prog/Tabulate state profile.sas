@@ -256,6 +256,7 @@ format inc inc_cat.;
 if inc= 6 then vacantstatus=1;
 else vacantstatus=0;
 run; 
+
 proc sort data=all;
 by group;
 run;
@@ -288,6 +289,131 @@ proc export data=vacancy_group2
    dbms=csv
    replace;
    run;
+
+/*tenure*/
+proc freq data=allunits;
+tables Category*tenure/nopercent norow nocol out=tenure_group;
+weight hhwt_geo;
+run;
+proc sort data= tenure_group;
+by tenure;
+run;
+
+proc transpose data=tenure_group prefix=count out=tenure_group2;
+by tenure;
+ID Category;
+var count;
+run;
+proc export data=tenure_group2
+ 	outfile="&_dcdata_default_path\NCHsg\Prog\state_stenure_&date..csv"
+   dbms=csv
+   replace;
+   run;
+
+/*structure*/
+
+proc freq data=allunits;
+tables Category*structure/nopercent norow nocol out=structure_group;
+weight hhwt_geo;
+run;
+proc sort data= structure_group;
+by structure;
+run;
+
+proc transpose data=structure_group prefix=count out=structure_group2;
+by structure;
+ID Category;
+var count;
+run;
+proc export data=structure_group2
+ 	outfile="&_dcdata_default_path\NCHsg\Prog\state_structure_&date..csv"
+   dbms=csv
+   replace;
+   run;
+
+/*strcuture age*/
+
+proc freq data=allunits;
+tables Category*structureyear/nopercent norow nocol out=structureyear_group;
+weight hhwt_geo;
+run;
+proc sort data= structureyear_group;
+by structureyear;
+run;
+
+proc transpose data=structureyear_group prefix=count out=structureyear_group2;
+by structureyear;
+ID Category;
+var count;
+run;
+proc export data=structureyear_group2
+ 	outfile="&_dcdata_default_path\NCHsg\Prog\state_structureyear_&date..csv"
+   dbms=csv
+   replace;
+   run;
+
+/*pct costburden*/
+data allocc;
+merge fiveyeartotal_occ(in=a) categories;
+if a;
+by group ;
+perwt_geo= perwt*0.2;
+hhwt_geo= hhwt*0.2;
+run;
+
+proc freq data=allocc;
+tables Category*costburden/nopercent norow nocol out=costburden_group;
+weight hhwt_geo;
+run;
+proc sort data= costburden_group;
+by costburden;
+run;
+
+proc transpose data=costburden_group prefix=count out=costburden_group2;
+by costburden;
+ID Category;
+var count;
+run;
+proc export data=costburden_group2
+ 	outfile="&_dcdata_default_path\NCHsg\Prog\state_costburden_&date..csv"
+   dbms=csv
+   replace;
+   run;
+
+/* cost category*/
+proc freq data=allocc;
+tables Category*allcostlevel/nopercent norow nocol out=allcostlevel_group;
+weight hhwt_geo;
+run;
+
+proc sort data= allcostlevel_group;
+by allcostlevel;
+run;
+
+proc transpose data=allcostlevel_group prefix=count out=allcostlevel_group2;
+by allcostlevel;
+ID Category;
+var count;
+run;
+
+proc export data=allcostlevel_group2
+ 	outfile="&_dcdata_default_path\NCHsg\Prog\state_costlevel_&date..csv"
+   dbms=csv
+   replace;
+   run;
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
