@@ -205,16 +205,18 @@ proc export data=age_group2
    run;
 
 /*household tabulations */
-
-data fiveyeartotal_hh;
-set fiveyeartotal_dem(where= (relate=01));
+  data fiveyeartotal_occ;
+	set NCHsg.fiveyeartotal (drop= County) ;
+	by county2_char;
+	retain group 0;
+	if first.county2_char then group=group+1;
 run;
 
-proc sort data= fiveyeartotal_hh;
+proc sort data= fiveyeartotal_occ;
 by Category ;
 run;
 
-proc summary data = fiveyeartotal_hh;
+proc summary data = fiveyeartotal_occ;
 class Category;
 var numprec hhincome;
 weight hhwt_geo;
@@ -228,13 +230,6 @@ proc export data=hhprofile
 /**************************************************************************
 Housing profile
 **************************************************************************/
-  data fiveyeartotal_occ;
-	set NCHsg.fiveyeartotal (drop= County) ;
-	by county2_char;
-	retain group 0;
-	if first.county2_char then group=group+1;
-run;
-
  data fiveyeartotal_vacant; 
    set NCHsg.fiveyeartotal_vacant;
 	by county2_char;
@@ -266,12 +261,11 @@ data allunits;
 merge all(in=a) categories;
 if a;
 by group ;
-perwt_geo= perwt*0.2;
-hhwt_geo= hhwt*0.2;
 run;
 
 proc freq data=allunits;
 tables Category*vacantstatus/nopercent norow nocol out=vacancy_group;
+weight hhwt_geo;
 run;
 
 proc sort data= vacancy_group;
@@ -357,8 +351,6 @@ data allocc;
 merge fiveyeartotal_occ(in=a) categories;
 if a;
 by group ;
-perwt_geo= perwt*0.2;
-hhwt_geo= hhwt*0.2;
 run;
 
 proc freq data=allocc;

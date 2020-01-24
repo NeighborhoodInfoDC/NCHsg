@@ -364,6 +364,167 @@ proc export data=county_structure2
    replace;
    run;
 
+/*future housing needs desired units*/
+/*jurisdiction desire and halfway (by tenure)*/
+proc sort data=Fiveyeartotal_cat;
+by Category; 
+run;
+proc freq data=Fiveyeartotal_cat;
+by Category;
+tables inc*mallcostlevel /nopercent norow nocol out=geo_desire;
+weight hhwt_geo;
+*format county2_char county2_char. mallcostlevel;
+run;
+proc transpose data=geo_desire out=geo_d
+prefix=level;
+id mallcostlevel;
+by Category inc;
+var count;
+run;
+
+proc freq data=Fiveyeartotal_cat;
+by Category;
+tables inc*mallcostlevel /nopercent norow nocol out=geo_desire_rent;
+weight hhwt_geo;
+where tenure=1 ;
+*format county2_char county2_char. mallcostlevel;
+run;
+	proc transpose data=geo_desire_rent out=geo_dr
+	prefix=level;
+	id mallcostlevel;
+	by Category inc;
+	var count;
+	run;
+
+proc freq data=Fiveyeartotal_cat;
+by Category;
+tables inc*mallcostlevel /nopercent norow nocol out=geo_desire_own;
+weight hhwt_geo;
+where tenure=2 ;
+*format county2_char county2_char. mallcostlevel;
+run;
+	proc transpose data=geo_desire_own out=geo_do
+	prefix=level;
+	id mallcostlevel;
+	by Category inc;
+	var count;
+	run;
+data geo_desire_units (drop=_label_ _name_); 
+		set geo_d (in=a) geo_do (in=b) geo_dr (in=c);
+
+	length name $20.;
+
+	if _name_="COUNT" & a then name="Desired All";
+	if _name_="COUNT" & b then name="Desired Owner";
+	if _name_="COUNT" & c then name="Desired Renter";
+	run; 
+
+/*export all 3 jurisidiction scenarios*/ 
+proc sort data= geo_desire_units ;
+by Category inc;
+proc export data=geo_desire_units 
+	outfile="&_dcdata_default_path\NCHsg\Prog\geo_unitsdesired_&date..csv"
+	dbms=csv
+	replace;
+run;
+
+/*vacancy rate by cost level*/
+data fiveyeartotal_all;
+set fiveyeartotal fiveyeartotal_vacant;
+run;
+
+proc sort data= fiveyeartotal_all;
+by group;
+run;
+
+data fiveyeartotal_cat_all;
+merge fiveyeartotal_all(in=a) categories;
+if a;
+by group;
+run;
+
+proc sort data=Fiveyeartotal_cat_all;
+by Category; 
+run;
+
+proc summary data= fiveyeartotal_cat_all;
+class Category allcostlevel vacancy;
+	var total;
+	weight hhwt_geo;
+	output out = geo_vacant sum=;
+run;
+
+proc export data= geo_vacant
+	outfile="&_dcdata_default_path\NCHsg\Prog\geo_vacancy_&date..csv"
+	dbms=csv
+	replace;
+run;
+
+proc sort data=Fiveyeartotal_cat;
+by Category; 
+run;
+
+proc summary data= fiveyeartotal_cat;
+class Category allcostlevel;
+	var total;
+	weight hhwt_geo;
+	output out = geo_nonvacant sum=;
+run;
+
+proc export data= geo_nonvacant
+	outfile="&_dcdata_default_path\NCHsg\Prog\geo_nonvacant_&date..csv"
+	dbms=csv
+	replace;
+run;
+
+
+
+
+
+
+
+
+/*unsubsidized low cost stock*/
+
+data rental;
+set fiveyeartotal_cat (where= (tenure=1));
+if rentgrs=<700 then delete;
+if UNITSSTR = 00 then substrucutre=5;
+if UNITSSTR in (01, 02) then substrucutre=4;
+if UNITSSTR in (03, 04) then substrucutre=1;
+if UNITSSTR in (05, 06) then substrucutre=2;
+if UNITSSTR in (07, 08, 09, 10) then substrucutre=3;
+run;
+
+proc freq data=rental;
+by category;
+tables substrucutre*structureyear /nopercent norow nocol out=geo_lowcost;
+weight hhwt_geo;
+*format county2_char county2_char. mallcostlevel;
+run;
+
+proc sort data=geo_lowcost;
+by category substructure structureyear;
+run;
+
+proc transpose data=geo_lowcost out=geo_lowcost2
+prefix= level;
+id structureyear;
+by category substrucutre;
+var count;
+run;
+
+proc export data=geo_lowcost2
+	outfile="&_dcdata_default_path\NCHsg\Prog\geo_lowcost_&date..csv"
+	dbms=csv
+	replace;
+run;
+
+
+
+
+
+
 
 
 
@@ -430,7 +591,7 @@ run;
 data all_costb;
 	set fiveyeartotal;
 	where costburden=1;
-	run;
+run;  
 
 proc surveyselect data=all_costb  groups=2 seed=5000 out=randomgroups noprint;
 run; 
@@ -628,119 +789,3 @@ data geo_units (drop=_label_ _name_);
 	if _name_="COUNT" & b then name="Actual Owner";
 	if _name_="COUNT" & c then name="Actual Rental";
 	run; 
-
-/*jurisdiction desire and halfway (by tenure)*/
-proc sort data=fiveyeartotal;
-by county2_char; 
-proc freq data=fiveyeartotal;
-by county2_char;
-tables inc*mallcostlevel /nopercent norow nocol out=geo_desire;
-weight hhwt_geo;
-*format county2_char county2_char. mallcostlevel;
-run;
-	proc transpose data=geo_desire out=geo_d
-	prefix=level;
-	id mallcostlevel;
-	by county2_char inc;
-	var count;
-	run;
-
-proc freq data=fiveyeartotal;
-by county2_char;
-tables inc*mallcostlevel /nopercent norow nocol out=geo_desire_rent;
-weight hhwt_geo;
-where tenure=1 ;
-*format county2_char county2_char. mallcostlevel;
-run;
-	proc transpose data=geo_desire_rent out=geo_dr
-	prefix=level;
-	id mallcostlevel;
-	by county2_char inc;
-	var count;
-	run;
-
-proc freq data=fiveyeartotal;
-by county2_char;
-tables inc*mallcostlevel /nopercent norow nocol out=geo_desire_own;
-weight hhwt_geo;
-where tenure=2 ;
-*format county2_char county2_char. mallcostlevel;
-run;
-	proc transpose data=geo_desire_own out=geo_do
-	prefix=level;
-	id mallcostlevel;
-	by county2_char inc;
-	var count;
-	run;
-data geo_desire_units (drop=_label_ _name_); 
-		set geo_d (in=a) geo_do (in=b) geo_dr (in=c);
-
-	length name $20.;
-
-	if _name_="COUNT" & a then name="Desired All";
-	if _name_="COUNT" & b then name="Desired Owner";
-	if _name_="COUNT" & c then name="Desired Renter";
-	run; 
-proc sort data=fiveyearrandom;
-by county2_char;
-proc freq data=fiveyearrandom;
-by county2_char;
-tables inc*allcostlevel_halfway /nofreq nopercent nocol out=geo_half_byinc;
-weight hhwt_geo;
-
-*format county2_char county2_char. allcostlevel_halfway;
-run;
-proc transpose data=geo_half_byinc out=geo_half
-	prefix=level;
-	id allcostlevel_halfway;
-	by county2_char inc;
-	var count;
-	run;
-proc freq data=fiveyearrandom;
-by county2_char;
-tables inc*allcostlevel_halfway /nofreq nopercent nocol out=geo_half_rent;
-weight hhwt_geo;
-where tenure=1; 
-*format county2_char county2_char. allcostlevel_halfway;
-run;
-proc transpose data=geo_half_rent out=geo_halfr
-	prefix=level;
-	id allcostlevel_halfway;
-	by county2_char inc;
-	var count;
-	run;
-proc freq data=fiveyearrandom;
-by county2_char;
-tables inc*allcostlevel_halfway /nofreq nopercent nocol out=geo_half_own;
-weight hhwt_geo;
-where tenure=2; 
-*format county2_char county2_char. allcostlevel_halfway;
-run;
-proc transpose data=geo_half_own out=geo_halfo
-	prefix=level;
-	id allcostlevel_halfway;
-	by county2_char inc;
-	var count;
-	run;
-
-data geo_half_units (drop=_label_ _name_); 
-		set geo_half (in=a) geo_halfo (in=b) geo_halfr (in=c);
-
-	length name $20.;
-
-	if _name_="COUNT" & a then name="Halfway All";
-	if _name_="COUNT" & b then name="Halfway Owner";
-	if _name_="COUNT" & c then name="Halfway Rental";
-	run; 
-
-/*export all 3 jurisidiction scenarios*/ 
-data geo_all;
-set geo_units geo_desire_units geo_half_units;
-run; 
-proc sort data= geo_all;
-by county2_char name inc;
-proc export data=geo_all
- 	outfile="&_dcdata_default_path\NCHsg\Prog\geo_units_&date..csv"
-   dbms=csv
-   replace;
-   run;
