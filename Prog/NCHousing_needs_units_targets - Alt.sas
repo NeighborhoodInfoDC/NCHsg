@@ -137,9 +137,7 @@ run;
 	%assign_NCcounty2;
 	%assign_NCcounty3;
 	county2_char = county2;
-
 	run;
-
 
 	proc sort data=Ipums.Acs_&year._NC out=NCarea_&year._1;
 	by upuma;
@@ -155,26 +153,48 @@ run;
 	run;
 
  %**create ratio for rent to rentgrs to adjust rents on vacant units**;
-	 data Ratio_&year.;
+	data Ratio_&year.;
 
 		  set NCarea_&year.
 		    (keep= rent rentgrs pernum gq ownershpd county2_char
 		     where=(pernum=1 and gq in (1,2) and ownershpd in ( 22 )));
 		     
 		  Ratio_rentgrs_rent_&year. = rentgrs / rent;
-		 
-		run;
+	run;
 
 		proc means data=Ratio_&year.;
 		  var  Ratio_rentgrs_rent_&year. rentgrs rent;
 		  output out=Ratio_&year (keep=Ratio_rentgrs_rent_&year.) mean=;
 		run;
 
-data Housing_needs_baseline_&year.;
+data Housing_needs_baseline_&year._1;
 
   set NCarea_&year.
-        (keep=year serial pernum hhwt hhincome numprec UNITSSTR BUILTYR2 bedrooms gq ownershp owncost ownershpd rentgrs valueh county2_char afact afact2
+        (keep=year serial pernum MET2013 hhwt hhincome numprec UNITSSTR BUILTYR2 bedrooms gq ownershp owncost ownershpd rentgrs valueh county2_char afact afact2
          where=(pernum=1 and gq in (1,2) and ownershpd in ( 12,13,21,22 )));
+
+		 *adjust all incomes to 2017 $ to match use of 2017 family of 4 income limit in projections (originally based on use of most recent 5-year IPUMS; 
+	MID= put(MET2013, 5.);
+
+	if MET2013= 0 then do;
+	MID="99999";
+	end;
+
+run;
+
+proc sort data= Housing_needs_baseline_&year._1;
+by MID;
+run;
+
+data Housing_needs_baseline_&year._2;
+merge Housing_needs_baseline_&year._1(in=a) NC17_limits;
+if a;
+by MID;
+run;
+
+data Housing_needs_baseline_&year.;
+
+	set Housing_needs_baseline_&year._2;
 
 	 *adjust all incomes to 2017 $ to match use of 2017 family of 4 income limit in projections (originally based on use of most recent 5-year IPUMS; 
 
@@ -185,6 +205,7 @@ data Housing_needs_baseline_&year.;
 	*create HUD_inc - uses 2017 limits but has categories for 120-200% and 200%+ AMI; 
 
 		%Hud_inc_NCState( hhinc=hhincome_a, hhsize=numprec )  /*use this statewide macro for now*/
+
 run; 
 
 data Housing_needs_baseline_&year._3;
@@ -926,5 +947,6 @@ tables vacancy /nopercent norow nocol out=other_vacant;
 weight hhwt_geo;
 *format county2_char county2_char.;
 run; 
+
 
 
