@@ -290,27 +290,12 @@ data Housing_needs_baseline_&year._3;
 			*for desired cost for current housing needs is current payment if not cost-burdened
 			or income-based payment if cost-burdened;
 
-			if costburden=1 then do; 
-
 				if max_rent<350 then mallcostlevel=1;
 				if 350 <=max_rent<700 then mallcostlevel=2;
 				if 700 <=max_rent<1000 then mallcostlevel=3;
 				if 1000 <=max_rent<1500 then mallcostlevel=4;
 				if 1500 <=max_rent<2500 then mallcostlevel=5;
 				if max_rent >= 2500 then mallcostlevel=6;
-
-			end; 
-
-			else if costburden=0 then do;
-
-				if rentgrs_a<350 then mallcostlevel=1;
-				if 350 <=rentgrs_a<700 then mallcostlevel=2;
-				if 700 <=rentgrs_a<1000 then mallcostlevel=3;
-				if 1000 <=rentgrs_a<1500 then mallcostlevel=4;
-				if 1500 <=rentgrs_a<2500 then mallcostlevel=5;
-				if rentgrs_a >= 2500 then mallcostlevel=6;
-
-			end; 
 
 
 	end;
