@@ -135,7 +135,7 @@ run;
 	if first.county2_char then group=group+1;
  run;
 
-proc export data=other_vacant
+proc export data=fiveyeartotal_othervacant
  	outfile="&_dcdata_default_path\NCHsg\Prog\other_vacant_&date..csv"
    dbms=csv
    replace;
