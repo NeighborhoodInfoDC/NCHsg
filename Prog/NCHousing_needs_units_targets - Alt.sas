@@ -927,8 +927,4 @@ weight hhwt_geo;
 *format county2_char county2_char.;
 run; 
 
-proc export data=fiveyeartotal_othervacant
- 	outfile="&_dcdata_default_path\NCHsg\Prog\other_vacant_&date..csv"
-   dbms=csv
-   replace;
-   run;
+
