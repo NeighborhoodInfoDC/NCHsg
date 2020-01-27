@@ -717,7 +717,7 @@ if hhincome_a in ( 9999999, .n ) then inc = .n;
 		if 20728.563641  =< hhincome_a < 39142.262306 then inc=2;
 		if 39142.262306  =< hhincome_a < 62051.245269 then inc=3;
 		if 62051.245269  =< hhincome_a < 100000 then inc=4;
-		if 100000  =< hhincome_a < 1570000 then inc=5;
+		if 100000  =< hhincome_a =< 1570000 then inc=5;
   end;
 	    label /*hud_inc = 'HUD Income Limits category for household (2016)'*/
 	    inc='Income quintiles statewide not account for HH size';
