@@ -175,6 +175,9 @@ data Housing_needs_baseline_&year._1;
 	MID="99999";
 	end;
 
+	if county2_char = "4800" then do;
+	MID= "99999";
+    end;
 run;
 
 proc sort data= Housing_needs_baseline_&year._1;
@@ -290,27 +293,12 @@ data Housing_needs_baseline_&year._3;
 			*for desired cost for current housing needs is current payment if not cost-burdened
 			or income-based payment if cost-burdened;
 
-			if costburden=1 then do; 
-
 				if max_rent<350 then mallcostlevel=1;
 				if 350 <=max_rent<700 then mallcostlevel=2;
 				if 700 <=max_rent<1000 then mallcostlevel=3;
 				if 1000 <=max_rent<1500 then mallcostlevel=4;
 				if 1500 <=max_rent<2500 then mallcostlevel=5;
 				if max_rent >= 2500 then mallcostlevel=6;
-
-			end; 
-
-			else if costburden=0 then do;
-
-				if rentgrs_a<350 then mallcostlevel=1;
-				if 350 <=rentgrs_a<700 then mallcostlevel=2;
-				if 700 <=rentgrs_a<1000 then mallcostlevel=3;
-				if 1000 <=rentgrs_a<1500 then mallcostlevel=4;
-				if 1500 <=rentgrs_a<2500 then mallcostlevel=5;
-				if rentgrs_a >= 2500 then mallcostlevel=6;
-
-			end; 
 
 
 	end;
@@ -705,7 +693,7 @@ if hhincome_a in ( 9999999, .n ) then inc = .n;
 		if 20728.563641  =< hhincome_a < 39142.262306 then inc=2;
 		if 39142.262306  =< hhincome_a < 62051.245269 then inc=3;
 		if 62051.245269  =< hhincome_a < 100000 then inc=4;
-		if 100000  =< hhincome_a < 1570000 then inc=5;
+		if 100000  =< hhincome_a =< 1570000 then inc=5;
   end;
 	    label /*hud_inc = 'HUD Income Limits category for household (2016)'*/
 	    inc='Income quintiles statewide not account for HH size';
@@ -915,3 +903,4 @@ tables vacancy /nopercent norow nocol out=other_vacant;
 weight hhwt_geo;
 *format county2_char county2_char.;
 run; 
+
