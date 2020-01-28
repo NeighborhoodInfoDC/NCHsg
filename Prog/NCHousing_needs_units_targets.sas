@@ -175,6 +175,9 @@ data Housing_needs_baseline_&year._1;
 	MID="99999";
 	end;
 
+	if county2_char = "4800" then do;
+	MID= "99999";
+    end;
 run;
 
 proc sort data= Housing_needs_baseline_&year._1;
@@ -900,3 +903,4 @@ tables vacancy /nopercent norow nocol out=other_vacant;
 weight hhwt_geo;
 *format county2_char county2_char.;
 run; 
+

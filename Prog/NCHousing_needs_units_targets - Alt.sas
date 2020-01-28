@@ -180,6 +180,10 @@ data Housing_needs_baseline_&year._1;
 	MID="99999";
 	end;
 
+	if county2_char = "4800" then do;
+	MID= "99999";
+    end;
+
 run;
 
 proc sort data= Housing_needs_baseline_&year._1;
