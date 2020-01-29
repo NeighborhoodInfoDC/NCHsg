@@ -311,10 +311,33 @@ data geo_desire_units (drop=_label_ _name_);
 	if _name_="COUNT" & c then name="Desired Renter";
 	run; 
 proc export data=geo_desire_units
- 	outfile="&_dcdata_default_path\NCHsg\Prog\geo_desireunits_&date..csv"
+ 	outfile="&_dcdata_default_path\NCHsg\Prog\alt_geo_desireunitsall_&date..csv"
    dbms=csv
    replace;
    run;
+proc sort data= fiveyeartotal;
+by category;
+run;
+proc freq data=fiveyeartotal;
+by category;
+tables inc*mallcostlevel /nopercent norow nocol out=geo_desire_all2;
+weight hhwt_geo;
+*format county2_char county2_char. mallcostlevel;
+run;
+proc sort data= geo_desire_all2;
+by category inc;
+run;
+proc transpose data= geo_desire_all2 out=geo_desire_all3 prefix=level;
+id mallcostlevel;
+by category inc;
+var count;
+run;
+proc export data=geo_desire_all3
+ 	outfile="&_dcdata_default_path\NCHsg\Prog\alt_geo_desireunits_&date..csv"
+   dbms=csv
+   replace;
+   run;
+
 
 /*housing stock by abiltiy to pay*/
 *finish could pay more;
@@ -383,6 +406,43 @@ proc export data=geo_vacant2
   dbms=csv
    replace;
    run;
+
+/*households by cost needs*/
+data costneeds;
+set fiveyeartotal;
+regularmaxcost = HHINCOME_a/12*.3;
+regularmax=.;
+if 0 <=regularmaxcost<350 then regularmax=1;  
+if 350 <=regularmaxcost<700 then regularmax=2;
+if 700 <=regularmaxcost<1000 then regularmax=3;
+if 1000 <=regularmaxcost<1550 then regularmax=4;
+if 1550 <=regularmaxcost<2400 then regularmax=5;
+if regularmaxcost >= 2400 then regularmax=6;
+run;
+
+proc sort data= costneeds;
+by category ;
+run;
+
+proc freq data= costneeds;
+by category;
+tables regularmax* inc/ nopercent norow nocol out= geo_regularmax;
+weight hhwt_geo;
+run;
+proc sort data= geo_regularmax;
+by category regularmax;
+run;
+proc transpose data= geo_regularmax out=geo_regularmax2 prefix=level;
+id regularmax;
+by category inc;
+var count;
+run;
+
+proc export data= geo_regularmax2
+ outfile="&_dcdata_default_path\NCHsg\Prog\regular_maxdesired_&date..csv"
+  dbms=csv
+   replace;
+run;
 
 
 

@@ -394,6 +394,7 @@ proc export data=allcostlevel_group2
    replace;
    run;
 
+/*population by 45 geo units*/
 
 
 
@@ -411,46 +412,5 @@ proc export data=allcostlevel_group2
 
 
 
-
-
-
-
-  ** Determine maximum HH size based on bedrooms **;
-  
-  select ( bedrooms );
-    when ( 1 )       /** Efficiency **/
-      Max_hh_size = 1;
-    when ( 2 )       /** 1 bedroom **/
-      Max_hh_size = 2;
-    when ( 3 )       /** 2 bedroom **/
-      Max_hh_size = 3;
-    when ( 4 )       /** 3 bedroom **/
-      Max_hh_size = 4;
-    when ( 5 )       /** 4 bedroom **/
-      Max_hh_size = 5;
-    when ( 6, 7, 8, 9, 10, 11, 12 )       /** 5+ bedroom **/
-      Max_hh_size = 7;
-    otherwise
-      do; 
-        %err_put( msg="Invalid bedroom size: " serial= bedrooms= ) 
-      end;
-  end;
-
-  if ownershpd in ( 12,13,21,22 ) then do;
-    %Hud_inc_2011( hud_inc=Hud_inc_hh )
-  end;
-  else do;
-    Hud_inc_hh = .n;
-  end;
-  
-  %Hud_inc_2011( hhinc=Max_income, hhsize=Max_hh_size, hud_inc=Hud_inc_unit )
-  
-  label
-    Hud_inc_hh = 'HUD income category for household'
-    Hud_inc_unit = 'HUD income category for unit';
-
-run;
-
-%File_info( data=DMPED.Housing_needs_baseline, freqvars=Hud_inc_hh Hud_inc_unit )
 
 
