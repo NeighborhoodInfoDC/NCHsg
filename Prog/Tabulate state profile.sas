@@ -396,9 +396,16 @@ proc export data=allcostlevel_group2
 
 /*population by 45 geo units*/
 
+proc freq data=fiveyeartotal_dem;
+tables group /nopercent norow nocol out=pop_group;
+weight perwt_geo;
+run;
 
-
-
+proc export data=pop_group
+ 	outfile="&_dcdata_default_path\NCHsg\Prog\population_45units_&date..csv"
+   dbms=csv
+   replace;
+   run;
 
 
 
