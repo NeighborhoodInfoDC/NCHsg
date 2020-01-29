@@ -114,26 +114,44 @@ set NCHsg.Puma_categories_121;
 run;
 
 /*read in dataset created by NCHousing_needs_units_targets.sas*/
-data fiveyeartotal;
+data fiveyeartotal2;
 	set NCHsg.fiveyeartotal_alt ;
 	by county2_char;
 	retain group 0;
 	if first.county2_char then group=group+1;
+	drop county;
+run;
+data fiveyeartotal;
+merge fiveyeartotal2(in=a) categories;
+if a;
+by group ;
 run;
 
- data fiveyeartotal_vacant; 
+ data fiveyeartotal_vacant2; 
    set NCHsg.fiveyeartotal_vacant_alt;
    	by county2_char;
 	retain group 0;
 	if first.county2_char then group=group+1;
  run;
 
- data fiveyeartotal_othervacant; 
+ data fiveyeartotal_vacant;
+merge fiveyeartotal_vacant2(in=a) categories;
+if a;
+by group ;
+run;
+
+ data fiveyeartotal_othervacant2; 
    set NCHsg.fiveyeartotal_othervacant_alt ;
    	by county2_char;
 	retain group 0;
 	if first.county2_char then group=group+1;
  run;
+
+ data fiveyeartotal_othervacant;
+merge fiveyeartotal_othervacant2(in=a) categories;
+if a;
+by group ;
+run;
 
 proc export data=fiveyeartotal_othervacant
  	outfile="&_dcdata_default_path\NCHsg\Prog\other_vacant_&date..csv"
@@ -147,6 +165,8 @@ data all(label= "NC all regular housing units 13-17 pooled");;
 	if a then inc=6; 
 format inc inc_cat.;
 run; 
+
+
 proc contents data=all; run;
 
 /*output current households by unit cost catgories by tenure*/
@@ -207,6 +227,32 @@ run;
 	run; 
 
 proc export data=region
+ 	outfile="&_dcdata_default_path\NCHsg\Prog\Current_housing_costall_&date..csv"
+   dbms=csv
+   replace;
+   run;
+
+/*output current households by unit cost catgories by geo groups*/
+proc sort data= all;
+by Category;
+run;
+
+proc freq data=all;
+by Category;
+tables inc*allcostlevel /nopercent norow nocol out=region_units2;
+weight hhwt_geo;
+run;
+proc sort data= region_units2;
+by inc;
+run;
+
+proc transpose data=region_units2 prefix=level  out=ru2;
+*id ;
+by inc Category;
+var count;
+run;
+
+proc export data=ru2
  	outfile="&_dcdata_default_path\NCHsg\Prog\Current_housing_cost_&date..csv"
    dbms=csv
    replace;
@@ -272,15 +318,24 @@ proc export data=geo_desire_units
 
 /*housing stock by abiltiy to pay*/
 *finish could pay more;
-proc freq data=all;
-*by county2_char;
+
+proc sort data= fiveyeartotal;
+by Category couldpaymore allcostlevel;
+run;
+
+proc freq data=fiveyeartotal;
+by Category;
 tables couldpaymore*allcostlevel /nopercent norow nocol out=geo_paymore;
 weight hhwt_geo;
 *format county2_char county2_char.;
 run;
+
+proc sort data= geo_paymore;
+by couldpaymore ;
+run;
 	proc transpose data=geo_paymore out=geo_m prefix=level;
 	id allcostlevel;
-	by couldpaymore;
+	by couldpaymore category;
 	var count;
 	run;
 
@@ -303,16 +358,23 @@ proc export data=couldpaymore
    replace;
    run;
 
-proc freq data=all;
-*by county2_char;
-tables vacancy* allcostlevel /nopercent norow nocol out=geo_vacant;
+proc sort data= fiveyeartotal_vacant;
+by category;
+run;
+
+proc freq data= fiveyeartotal_vacant;
+by Category;
+tables allcostlevel /nopercent norow nocol out=geo_vacant;
 weight hhwt_geo;
 *format county2_char county2_char.;
+run;
+proc sort data= geo_vacant;
+by category allcostlevel;
 run;
 
 proc transpose data=geo_vacant out=geo_vacant2 prefix=level;
 id allcostlevel;
-by vacancy;
+by category;
 var count;
 run;
 
@@ -323,138 +385,5 @@ proc export data=geo_vacant2
    run;
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-/*output by jurisdiction*./
-
- /*actual unit distribution (all, renter, owner) */
-proc sort data=all;
-by county2_char;
-proc freq data=all;
-by county2_char;
-tables inc*allcostlevel /nopercent norow nocol out=Allgeo;
-weight hhwt_geo;
-*format county2_char county2_char.;
-run;
-	proc transpose data=Allgeo out=geo_u prefix=level;;
-	by county2_char inc;
-	var count;
-
-	run;
-
-proc freq data=all;
-by county2_char;
-tables inc*allcostlevel /nopercent norow nocol out=allgeo_rent;
-where tenure=1;
-weight hhwt_geo;
-*format county2_char county2_char.;
-run;
-	proc transpose data=allgeo_rent out=geo_r prefix=level;;
-	by county2_char inc;
-	var count;
-
-	run;
-
-proc freq data=all;
-by county2_char;
-tables inct*allcostlevel /nopercent norow nocol out=allgeo_own;
-where tenure=2;
-weight hhwt_geo;
-*format county2_char county2_char.;
-run;
-	proc transpose data=allgeo_own out=geo_o prefix=level;;
-	by county2_char inc;
-	var count;
-
-	run;
-data geo_units (drop=_label_ _name_); 
-		set geo_u (in=a) geo_o (in=b) geo_r (in=c);
-
-	length name $20.;
-
-	if _name_="COUNT" & a then name="Actual All";
-	if _name_="COUNT" & b then name="Actual Owner";
-	if _name_="COUNT" & c then name="Actual Rental";
-	run; 
-
-
-
-*finish could pay more;
-proc freq data=all;
-where couldpaymore=1; 
-by county2_char;
-tables inc*allcostlevel /nopercent norow nocol out=geo_paymore;
-weight hhwt_geo;
-*format county2_char county2_char.;
-run;
-	proc transpose data=geo_paymore out=geo_m prefix=level;;
-	by county2_char inc;
-	var count;
-	run;
-
- data couldpaymore (drop=_label_ _name_);
- 	set rp (in=a) rm (in=b) geo_m (in=c);
-
-	length name $20.;
-
-	if _name_="COUNT" & a then name="Region Pay Category";
-
-	if _name_="COUNT" & b then name="Region Pay More";
-
-	if _name_="COUNT" & c then name="Juris Pay More";
-
-	run;
-
-proc export data=couldpaymore
- outfile="&_dcdata_default_path\NCHsg\Prog\couldpaymore_&date..csv"
-  dbms=csv
-   replace;
-   run;
-
-
-*export cost burden and households counts by income category for jurisdiction level handouts; 
-
-   
-proc freq data=all;
-tables inc*county2_char /nopercent norow nocol  out=hhlds_juris;
-  weight hhwt_geo;
-   *format county2_char county2_char.;
-run;
-proc freq data=all;
-where costburden=1;
-tables inc*county2_char /nopercent norow nocol out=hhlds_juris_cb;
-  weight hhwt_geo;
-    *format county2_char county2_char.;
-run;
-
-data hhlds;
-merge hhlds_juris (drop=percent rename=(count=households)) hhlds_juris_cb (drop=percent rename=(count=costburden)); 
-by inc county2_char;
-
-run; 
-
-proc sort data=hhlds;
-by county2_char inc;
-
-proc export data=hhlds
- outfile="&_dcdata_default_path\NCHsg\Prog\hhlds_&date..csv"
-  dbms=csv
-   replace;
-   run;
 
 
