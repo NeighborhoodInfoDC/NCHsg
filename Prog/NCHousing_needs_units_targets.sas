@@ -625,6 +625,19 @@ else if  county2_char= "5001 to 5003" then geoid=43;
 else if  county2_char= "5200" then geoid=44;
 else if  county2_char= "5300 or 5400" then geoid=45;
 
+if hhincome_a in ( 9999999, .n ) then inc = .n;
+  else do;
+ /*hard code income categories to match the projections, since the calibrated distributino might be slightly different than the original one*/
+		if hhincome_a < 20728.563641 then inc=1;
+		if 20728.563641  =< hhincome_a < 39142.262306 then inc=2;
+		if 39142.262306  =< hhincome_a < 62051.245269 then inc=3;
+		if 62051.245269  =< hhincome_a < 100000 then inc=4;
+		if 100000  =< hhincome_a =< 1570000 then inc=5;
+  end;
+	    label /*hud_inc = 'HUD Income Limits category for household (2016)'*/
+	    inc='Income quintiles statewide not account for HH size';
+		format inc inc_cat.; 
+
 run;
 
 /*calculate average cost ratio for each hud_inc group that is used for maximum desired or affordable rent/owncost*/
@@ -679,38 +692,40 @@ by geoid;
 hhwt_geo=.; 
 
 hhwt_geo=hhwt*calibration*0.2; 
+hhwt_ori= hhwt*0.2;
 
 label hhwt_geo="Household Weight Calibrated to Steven Estimates for Households"
-	  calibration="Ratio of Steven 2015 estimate to ACS 2013-17 for 45 geographic units";
+	  calibration="Ratio of Steven 2015 estimate to ACS 2013-17 for 45 geographic units"
+	  hhwt_ori="Original Household Weight";
 
 run; 
 
-data fiveyeartotal;
-set fiveyeartotal_c;  
-if hhincome_a in ( 9999999, .n ) then inc = .n;
-  else do;
- /*hard code income categories to match the projections, since the calibrated distributino might be slightly different than the original one*/
-		if hhincome_a < 20728.563641 then inc=1;
-		if 20728.563641  =< hhincome_a < 39142.262306 then inc=2;
-		if 39142.262306  =< hhincome_a < 62051.245269 then inc=3;
-		if 62051.245269  =< hhincome_a < 100000 then inc=4;
-		if 100000  =< hhincome_a =< 1570000 then inc=5;
-  end;
-	    label /*hud_inc = 'HUD Income Limits category for household (2016)'*/
-	    inc='Income quintiles statewide not account for HH size';
-		format inc inc_cat.; 
-	hhwt_ori= hhwt*0.2;
+/*merge on county/puma categories*/
+data categories;
+	set NCHsg.Puma_categories_121;
 run;
 
+data fiveyeartotal;
+	set fiveyeartotal_c (drop= County) ;
+	by county2_char;
+	retain group 0;
+	if first.county2_char then group=group+1;
+run;
+data fiveyeartotal_cat;
+	merge fiveyeartotal(in=a) categories;
+	if a;
+	by group ;
+
+	label category="County/PUMA Group Designation";
+run;
 /*export dataset*/
  data NCHsg.fiveyeartotal (label= "NC households 13-17 pooled"); 
-   set fiveyeartotal;
+   set fiveyeartotal_cat;
+ run;
+ proc contents data=NCHsg.fiveyeartotal;
  run;
 
- proc contents data= fiveyeartotal;
- run;
-
-proc tabulate data=fiveyeartotal format=comma12. noseps missing;
+proc tabulate data=NCHsg.fiveyeartotal format=comma12. noseps missing;
   class county2_char;
   var hhwt_ori hhwt_geo;
   table
@@ -725,7 +740,7 @@ data fiveyeartotal_vacant;
 	set Housing_needs_vacant_2013 Housing_needs_vacant_2014 Housing_needs_vacant_2015 Housing_needs_vacant_2016 Housing_needs_vacant_2017;
 totalpop=0.2;
 merge=1;
-*totpop_wt= totalpop*AFACT2; 
+
 geoid=.;
 if county2_char= "0100" then geoid=1;
 else if  county2_char= "0200" then geoid=2;
@@ -787,18 +802,32 @@ hhwt_geo=.;
 hhwt_geo=hhwt*calibration*0.2; 
 hhwt_ori= hhwt*0.2;
 label hhwt_geo="Household Weight Calibrated to Steven Estimates for Households"
-	  calibration="Ratio of Steven 2015 estimate to ACS 2013-17 for 45 geographic units";
+	  calibration="Ratio of Steven 2015 estimate to ACS 2013-17 for 45 geographic units"
+	  hhwt_ori="Original Household Weight";
 
 run; 
 
+ data fiveyeartotal_vacant_C2; 
+   set fiveyeartotal_vacant_c;
+	by county2_char;
+	retain group 0;
+	if first.county2_char then group=group+1;
+ run;
+data fiveyeartotal_vacant_cat;
+	merge fiveyeartotal_vacant_C2 (in=a) categories;
+	if a;
+	by group ;
+
+	label category="County/PUMA Group Designation";
+run;
 /*export dataset*/
  data NCHsg.fiveyeartotal_vacant(label= "NC vacant housing units 13-17 pooled"); 
-   set fiveyeartotal_vacant_c;
-   hhwt_ori= hhwt*0.2;
- run;
- proc contents data =fiveyeartotal_vacant_c;run;
+   set fiveyeartotal_vacant_cat;
 
-proc tabulate data=fiveyeartotal_vacant_c format=comma12. noseps missing;
+ run;
+ proc contents data =NCHsg.fiveyeartotal_vacant;run;
+
+proc tabulate data=NCHsg.fiveyeartotal_vacant format=comma12. noseps missing;
   class county2_char;
   var hhwt_geo hhwt_ori;
   table
@@ -813,7 +842,7 @@ data fiveyeartotal_othervacant;
    set other_vacant_2013 other_vacant_2014 other_vacant_2015 other_vacant_2016 other_vacant_2017;
 totalpop=0.2;
 merge=1;
-*totpop_wt= totalpop*AFACT2; 
+
 geoid=.;
 if county2_char= "0100" then geoid=1;
 else if  county2_char= "0200" then geoid=2;
@@ -876,19 +905,34 @@ hhwt_geo=.;
 hhwt_geo=hhwt*calibration*0.2; 
 hhwt_ori= hhwt*0.2;
 label hhwt_geo="Household Weight Calibrated to Steven Estimates for Households"
-	  calibration="Ratio of Steven 2015 estimate to ACS 2013-17 for 45 geographic units";
+	  calibration="Ratio of Steven 2015 estimate to ACS 2013-17 for 45 geographic units"
+	  hhwt_ori="Original Household Weight";
 
 run; 
 
+ data fiveyeartotal_othervacant_c2; 
+   set fiveyeartotal_othervacant_c;
+	by county2_char;
+	retain group 0;
+	if first.county2_char then group=group+1;
+ run;
+data fiveyeartotal_othervacant_cat;
+	merge fiveyeartotal_othervacant_c2 (in=a) categories;
+	if a;
+	by group ;
+
+	label category="County/PUMA Group Designation";
+run;
+
 /*export dataset*/
  data NCHsg.fiveyeartotal_othervacant (label= "NC other vacant units 13-17 pooled"); 
-   set fiveyeartotal_othervacant_c;
+   set fiveyeartotal_othervacant_cat;
  run;
 
- proc contents data= fiveyeartotal_othervacant_c;
+ proc contents data= NCHsg.fiveyeartotal_othervacant ;
  run;
 
-proc tabulate data=fiveyeartotal_othervacant_c format=comma12. noseps missing;
+proc tabulate data=NCHsg.fiveyeartotal_othervacant  format=comma12. noseps missing;
   class county2_char;
   var hhwt_geo hhwt_ori;
   table
@@ -898,10 +942,12 @@ proc tabulate data=fiveyeartotal_othervacant_c format=comma12. noseps missing;
   *format county2_char county2_char.;
 run;
 
-proc freq data=fiveyeartotal_othervacant_c;
+proc freq data=NCHsg.fiveyeartotal_othervacant ;
 by county2_char;
 tables vacancy /nopercent norow nocol out=other_vacant;
 weight hhwt_geo;
 *format county2_char county2_char.;
 run; 
+
+
 
