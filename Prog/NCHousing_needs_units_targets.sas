@@ -245,10 +245,10 @@ data Housing_needs_baseline_&year._3;
 	 *create maximum desired or affordable rent based on HUD_Inc categories*; 
     /* need to discuss for NC, use hudinc for now*/
 	  if hud_inc in(1 2 3) then max_rent=HHINCOME_a/12*.3; *under 80% of AMI then pay 30% threshold; 
-	  if hud_inc =4 then max_rent=HHINCOME_a/12*.2; *avg for all HH hud_inc=4 in NC; 
-	  if costratio <=.16 and hud_inc = 5 then max_rent=HHINCOME_a/12*.16; *avg for all HH hud_inc=5 in NC; 	
+	  if hud_inc =4 then max_rent=HHINCOME_a/12*.208; *avg for all HH hud_inc=4 in NC; 
+	  if costratio <=.159 and hud_inc = 5 then max_rent=HHINCOME_a/12*.159; *avg for all HH hud_inc=5 in NC; 	
 		else if hud_inc = 5 then max_rent=HHINCOME_a/12*costratio; *allow 120-200% above average to spend more; 
-	  if costratio <=.15 and hud_inc = 6 then max_rent=HHINCOME_a/12*.15; *avg for all HH hud_inc=6 in NC; 
+	  if costratio <=.112 and hud_inc = 6 then max_rent=HHINCOME_a/12*.112; *avg for all HH hud_inc=6 in NC; 
 	  	else if hud_inc=6 then max_rent=HHINCOME_a/12*costratio; *allow 200%+ above average to spend more; 
      
 	 *create flag for household could "afford" to pay more; 
@@ -316,10 +316,10 @@ data Housing_needs_baseline_&year._3;
 
 		/*need to discuss for NC*/
 		if hud_inc in(1 2 3) then max_ocost=HHINCOME_a/12*.3; *under 80% of AMI then pay 30% threshold; 
-		if hud_inc =4 then max_ocost=HHINCOME_a/12*.20; *avg for all HH hud_inc=4in NC;
-		if costratio <=.16 and hud_inc = 5 then max_ocost=HHINCOME_a/12*.16; *avg for all HH HUD_inc=5; 
+		if hud_inc =4 then max_ocost=HHINCOME_a/12*.208; *avg for all HH hud_inc=4in NC;
+		if costratio <=.159 and hud_inc = 5 then max_ocost=HHINCOME_a/12*.159; *avg for all HH HUD_inc=5; 
 			else if hud_inc = 5 then max_ocost=HHINCOME_a/12*costratio; *allow 120-200% above average to pay more; 
-		if costratio <=.15 and hud_inc=6 then max_ocost=HHINCOME_a/12*.15; *avg for all HH HUD_inc=6;
+		if costratio <=.112 and hud_inc=6 then max_ocost=HHINCOME_a/12*.112; *avg for all HH HUD_inc=6;
 			else if hud_inc = 6 then max_ocost=HHINCOME_a/12*costratio; *allow 120-200% above average to pay more; 
 		
 		*create flag for household could "afford" to pay more; 
@@ -577,7 +577,7 @@ data fiveyeartotal1;
 set Housing_needs_baseline_2013_3 Housing_needs_baseline_2014_3 Housing_needs_baseline_2015_3 Housing_needs_baseline_2016_3 Housing_needs_baseline_2017_3;
 totalpop=0.2;
 merge=1;
-*totpop_wt= totalpop*AFACT2; 
+
 geoid=.;
 if county2_char= "0100" then geoid=1;
 else if  county2_char= "0200" then geoid=2;
@@ -635,6 +635,7 @@ run;
 proc summary data= fiveyeartotal1;
 by hud_inc /*tenure*/;
 var costratio HHincome_a;
+weight hhwt; 
 output out= costratio_hudinc mean=;
 run;
 
