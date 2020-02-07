@@ -933,7 +933,7 @@ run;
  run;
 
 proc tabulate data=NCHsg.fiveyeartotal_othervacant  format=comma12. noseps missing;
-  class county2_char;
+  class category;
   var hhwt_geo hhwt_ori;
   table
     all='Total' county2_char=' ',
@@ -943,11 +943,28 @@ proc tabulate data=NCHsg.fiveyeartotal_othervacant  format=comma12. noseps missi
 run;
 
 proc freq data=NCHsg.fiveyeartotal_othervacant ;
-by county2_char;
+by category;
 tables vacancy /nopercent norow nocol out=other_vacant;
 weight hhwt_geo;
 *format county2_char county2_char.;
 run; 
+
+
+proc sort data= fiveyeartotal_othervacant_cat ;
+by category;
+run;
+
+proc freq data=fiveyeartotal_othervacant_cat ;
+by category;
+tables vacancy /nopercent norow nocol out=other_vacant;
+weight hhwt_geo;
+*format county2_char county2_char.;
+run; 
+proc export data=other_vacant
+	outfile="&_dcdata_default_path\NCHsg\Prog\othervacantotal_&date..csv"
+	dbms=csv
+	replace;
+run;
 
 
 
