@@ -1,6 +1,6 @@
 /**************************************************************************
- Program:  Subsidized_units_counts.sas
- Library:  RegHsg
+ Program:  Subsidized_units_counts_NC.sas
+ Library:  NCHsg
  Project:  NeighborhoodInfo DC
  Author:   W. Oliver
  Created:  02/7/19
@@ -29,24 +29,18 @@ Falls Church City (51610)
 Manassas City (51683)
 Manassas Park City (51685)
 
- Modifications:
+ Modifications:2/10/20 YS adapted for NC Housing
 **************************************************************************/
 
 %include "L:\SAS\Inc\StdLocal.sas";
 
 ** Define libraries **;
-%DCData_lib( RegHsg )
+%DCData_lib( NCHsg )
+%DCData_lib( Requests )
 ** Year range for preservation targets **;
-%let Startyr = 2015;
+%let Startyr = 2020;
 %let Endyr = 2999;  /** No upper year limit **/
 *Create property and unit counts for individual programs**;
-
-proc format;
-	value COG
-    1= "COG county"
-    0="Non COG county";
-
-run;
 proc format;
 	value ActiveUnits
     1= "Active subsidies"
@@ -72,8 +66,7 @@ run;
 
 proc format;
   value yearrng
-    2015-2020 = '2015 - 2020'
-    2021-2025 = '2021 - 2025'
+    2020-2025 = '2020 - 2025'
     2026-2030 = '2026 - 2030'
     2031-2035 = '2031 - 2035'
 	2036-2040 = '2036 - 2040'
@@ -82,28 +75,10 @@ proc format;
 	2051-2055 = '2051 - 2055'
 	2056-high = '2056 or higher';
 run;
-proc format;
-	value Jurisdiction
-		1= "DC"
-		2= "Charles County"
-		3= "Frederick County "
-		4="Montgomery County"
-		5="Prince Georges "
-		6="Arlington"
-		7="Fairfax, Fairfax city and Falls Church"
-		8="Loudoun"
-		9="Prince William, Manassas and Manassas Park"
-		10="Alexandria"
-		;
-
 
 data Work.Allassistedunits;
-	set RegHsg.Natlpres_activeandinc_prop;
-	if CountyCode in ("11001", "24017", "24021", "24031", "24033", "51013", "51059", "51107", "51153", "51510", "51600", "51610", "51683", "51685") then COGregion =1;
-  	else COGregion=0;
-  	format COGregion COG. ;
-	ucounty = CountyCode;
-	%ucounty_jurisdiction;
+	set Requests.natlpres_ActiveandInc_prop_NC;
+
 	s8_all_assistedunits=min(sum(s8_1_AssistedUnits, s8_2_AssistedUnits,0),TotalUnits);
 	s202_all_assistedunits=min(sum(s202_1_AssistedUnits, s202_2_AssistedUnits,0),TotalUnits);
 	s236_all_assistedunits=min(sum(s236_1_AssistedUnits, s236_2_AssistedUnits,0),TotalUnits);
@@ -318,7 +293,6 @@ label
   earliest_expirationdate15= 'Earliest expiration date between 2015 and 2035 for property'
   latest_expirationdate15= 'Latest expiration date between 2015 and 2035 for property';
 
-
   run;
 
 *Create construction dates for affordable housing;
@@ -333,7 +307,6 @@ else if 1971 <= year (PHConstructionDate) <= 1990 then timecount='1971-1990';
 else if year (PHConstructionDate) >= 1991 then timecount = '1991-2019';
 format PHConstructionDate MMDDYY10.;
 run;
-
 
 ** Review results of assisted unit and expiration date calculations **;
 
@@ -350,7 +323,7 @@ run;
 
 options missing=' ';
 
-ods csvall  body="&_dcdata_default_path\RegHsg\Prog\Subsidized_unit_counts_unique.csv";
+ods csvall  body="&_dcdata_default_path\NCHsg\Prog\Subsidized_unit_counts_unique.csv";
 
 title3 "Project and assisted unit unique counts";
 
@@ -370,7 +343,7 @@ run;
 
 ods csvall close;
 
-ods csvall  body="&_dcdata_default_path\RegHsg\Prog\Subsidized_unit_counts_jurisdiction.csv";
+ods csvall  body="&_dcdata_default_path\NCHsg\Prog\Subsidized_unit_counts_jurisdiction.csv";
 
 title3 "Projects and assisted units breakdown by jurisdiction";
 
@@ -393,7 +366,7 @@ run;
 
 ods csvall close;
 
-ods csvall  body="&_dcdata_default_path\RegHsg\Prog\Subsidized_unit_counts_expire.csv";
+ods csvall  body="&_dcdata_default_path\NCHsg\Prog\Subsidized_unit_counts_expire.csv";
 
 title3 "Projects and assisted units with expiring subsidies";
 footnote1 "LIHTC expiration includes 15-year compliance and 30-year subsidy end dates.";
@@ -417,7 +390,7 @@ run;
 ods csvall close;
 
 /*Section 8*/
-ods csvall body="&_dcdata_default_path\RegHsg\Prog\Subsidized_unit_counts_s8.csv";
+ods csvall body="&_dcdata_default_path\NCHsg\Prog\Subsidized_unit_counts_s8.csv";
 
 title3 "Section 8 projects and assisted units with expiring subsidies";
 footnote1;
@@ -439,7 +412,7 @@ run;
 ods csvall close;
 
 /*S202*/
-ods csvall body="&_dcdata_default_path\RegHsg\Prog\Subsidized_unit_counts_s202.csv";
+ods csvall body="&_dcdata_default_path\NCHsg\Prog\Subsidized_unit_counts_s202.csv";
 
 title3 "Section 202 projects and assisted units with expiring subsidies";
 footnote1;
@@ -461,7 +434,7 @@ run;
 ods csvall close;
 
 /*S236*/
-ods csvall body="&_dcdata_default_path\RegHsg\Prog\Subsidized_unit_counts_s236.csv";
+ods csvall body="&_dcdata_default_path\NCHsg\Prog\Subsidized_unit_counts_s236.csv";
 
 title3 "Section 236 projects and assisted units with expiring subsidies";
 footnote1;
@@ -483,7 +456,7 @@ run;
 ods csvall close;
 
 /*FHA*/
-ods csvall body="&_dcdata_default_path\RegHsg\Prog\Subsidized_unit_counts_FHA.csv";
+ods csvall body="&_dcdata_default_path\NCHsg\Prog\Subsidized_unit_counts_FHA.csv";
 
 title3 "FHA projects and assisted units with expiring subsidies";
 footnote1;
@@ -505,7 +478,7 @@ run;
 ods csvall close;
 
 /*LIHTC*/
-ods csvall body="&_dcdata_default_path\RegHsg\Prog\Subsidized_unit_counts_LIHTC.csv";
+ods csvall body="&_dcdata_default_path\NCHsg\Prog\Subsidized_unit_counts_LIHTC.csv";
 
 title3 "LIHTC projects and assisted units with expiring subsidies";
 footnote1;
@@ -527,7 +500,7 @@ run;
 ods csvall close;
 
 /*LIHTC-15year*/
-ods csvall body="&_dcdata_default_path\RegHsg\Prog\Subsidized_unit_counts_LIHTC15yr.csv";
+ods csvall body="&_dcdata_default_path\NCHsg\Prog\Subsidized_unit_counts_LIHTC15yr.csv";
 
 title3 "LIHTC projects and assisted units with expiring subsidies, 15 year dates";
 footnote1;
@@ -549,7 +522,7 @@ run;
 ods csvall close;
 
 /*RHS515*/
-ods csvall body="&_dcdata_default_path\RegHsg\Prog\Subsidized_unit_counts_rhs515.csv";
+ods csvall body="&_dcdata_default_path\NCHsg\Prog\Subsidized_unit_counts_rhs515.csv";
 
 title3 "RHS 515 projects and assisted units with expiring subsidies";
 footnote1;
@@ -571,7 +544,7 @@ run;
 ods csvall close;
 
 /*RHS538*/
-ods csvall body="&_dcdata_default_path\RegHsg\Prog\Subsidized_unit_counts_rhs538.csv";
+ods csvall body="&_dcdata_default_path\NCHsg\Prog\Subsidized_unit_counts_rhs538.csv";
 
 title3 "RHS 538 projects and assisted units with expiring subsidies";
 footnote1;
@@ -593,7 +566,7 @@ run;
 ods csvall close;
 
 /*HOME*/
-ods csvall body="&_dcdata_default_path\RegHsg\Prog\Subsidized_unit_counts_HOME.csv";
+ods csvall body="&_dcdata_default_path\NCHsg\Prog\Subsidized_unit_counts_HOME.csv";
 
 title3 "HOME projects and assisted units with expiring subsidies";
 footnote1;
@@ -615,7 +588,7 @@ run;
 ods csvall close;
 
 /*Public Housing*/
-ods csvall  body="&_dcdata_default_path\RegHsg\Prog\PH_unit_counts.csv";
+ods csvall  body="&_dcdata_default_path\NCHsg\Prog\PH_unit_counts.csv";
 
 title3 "Public housing projects and assisted units with latest construction dates";
 
