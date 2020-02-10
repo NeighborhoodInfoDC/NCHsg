@@ -150,6 +150,19 @@ proc export data=Allassistedunits
    run;
 
 /*geocode units in puma in arcgis and import back*/
+*this macro pads s variable with leading zeros;
+%macro zpad(s);
+    * first, recommend aligning the variable values to the right margin to create leading blanks, if they dont exist already;
+	&s. = right(&s.);
+
+	* then fill them with zeros;
+	if trim(&s.) ~= "" then do;	
+		do _i_ = 1 to length(&s.) while (substr(&s.,_i_,1) = " ");
+			substr(&s.,_i_,1) = "0";
+		end;
+	end;
+%mend zpad;
+
 
 data Allassistedunits_geo;
 set NCHsg.NCassistedunits;
@@ -157,11 +170,11 @@ run;
 proc sort data = Allassistedunits_geo;
 by PUMACE10;
 run;
-data categories;
-set NCHsg.cat_by_puma;
-*length pumace10 $5;
-pumace10= put(puma, $5.);
-*pumae10= translate(right(pumace10),'0', '');
+data categories (drop=_i_);
+set NCHsg.cat_by_puma (drop=pumace10);
+length pumace10 $5;
+pumace10=puma;
+%zpad(pumace10); *= translate(right(pumace10),'0', '');
 run;
 
 data Allassistedunits_geo2 ;
