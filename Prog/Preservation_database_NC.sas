@@ -831,11 +831,79 @@ run;
 proc freq data=test;
 tables city;
 run;
+
+proc export data=test
+ 	outfile="&_dcdata_default_path\NCHsg\Prog\Allassistedunits.csv"
+   dbms=csv
+   replace;
+   run;
+
+
+/*
+proc mapimport out=PUMA_shp
+  datafile="&_dcdata_r_path\NCHsg\Maps\tl_2018_37_puma10.shp";  
+run;
+
+proc sort data=PUMA_shp; by GEOID10;
+run;
+
+goptions reset=global border;
+
+data Allassistedunits2;
+set Allassistedunits;
+lat= Latitude;
+long= longitude;
+run;
+proc gproject latlon
+project=proj4 to="EPSG:32618"  
+data=Allassistedunits2 out=Allassistedunits3;
+id NHPDPropertyID;
+run;
+proc ginside includeborder
+  data=Allassistedunits3
+  map=PUMA_shp
+  out=PUMA_shp_join;
+  id GEOID10;
+run;
+*/
+/*geocode units in puma in arcgis and import back*/
+*this macro pads s variable with leading zeros;
+%macro zpad(s);
+    * first, recommend aligning the variable values to the right margin to create leading blanks, if they dont exist already;
+	&s. = right(&s.);
+
+	* then fill them with zeros;
+	if trim(&s.) ~= "" then do;	
+		do _i_ = 1 to length(&s.) while (substr(&s.,_i_,1) = " ");
+			substr(&s.,_i_,1) = "0";
+		end;
+	end;
+%mend zpad;
+
+data test_geo;
+set NCHsg.NCassistedunits;
+run;
+proc sort data = test_geo;
+by PUMACE10;
+run;
+data categories (drop=_i_);
+set NCHsg.cat_by_puma (drop=pumace10);
+length pumace10 $5;
+pumace10=puma;
+%zpad(pumace10); *= translate(right(pumace10),'0', '');
+run;
+
+data test_geo2 ;
+merge test_geo(in=a) categories;
+if a;
+by PUMACE10;
+run;
+
 /*finalize dataset*/
 
 %Finalize_data_set(
 /** Finalize data set parameters **/
-data=test,
+data=test_geo2,
 out=natlpres_ActiveandInc_prop_NC,
 outlib=NCHsg,
 label="National Preservation Database Active and Inconclusive Properties 1/2020 North Carolina",
