@@ -36,7 +36,7 @@ Manassas Park City (51685)
 
 ** Define libraries **;
 %DCData_lib( NCHsg )
-%DCData_lib( Requests )
+
 ** Year range for preservation targets **;
 %let Startyr = 2020;
 %let Endyr = 2999;  /** No upper year limit **/
@@ -77,7 +77,7 @@ proc format;
 run;
 
 data Work.Allassistedunits;
-	set Requests.natlpres_ActiveandInc_prop_NC;
+	set NCHsg.natlpres_ActiveandInc_prop_NC;
 
 	s8_all_assistedunits=min(sum(s8_1_AssistedUnits, s8_2_AssistedUnits,0),TotalUnits);
 	s202_all_assistedunits=min(sum(s202_1_AssistedUnits, s202_2_AssistedUnits,0),TotalUnits);
@@ -140,11 +140,76 @@ data Work.Allassistedunits;
 run;
 
 ** Check assisted unit counts and flags **;
-
 proc means data=Work.Allassistedunits n sum mean min max;
 run;
 
+proc export data=Allassistedunits
+ 	outfile="&_dcdata_default_path\NCHsg\Prog\Allassistedunits.csv"
+   dbms=csv
+   replace;
+   run;
 
+/*geocode units in puma in arcgis and import back*/
+*this macro pads s variable with leading zeros;
+%macro zpad(s);
+    * first, recommend aligning the variable values to the right margin to create leading blanks, if they dont exist already;
+	&s. = right(&s.);
+
+	* then fill them with zeros;
+	if trim(&s.) ~= "" then do;	
+		do _i_ = 1 to length(&s.) while (substr(&s.,_i_,1) = " ");
+			substr(&s.,_i_,1) = "0";
+		end;
+	end;
+%mend zpad;
+
+
+data Allassistedunits_geo;
+set NCHsg.NCassistedunits;
+run;
+proc sort data = Allassistedunits_geo;
+by PUMACE10;
+run;
+data categories (drop=_i_);
+set NCHsg.cat_by_puma (drop=pumace10);
+length pumace10 $5;
+pumace10=puma;
+%zpad(pumace10); *= translate(right(pumace10),'0', '');
+run;
+
+data Allassistedunits_geo2 ;
+merge Allassistedunits_geo(in=a) categories;
+if a;
+by PUMACE10;
+run;
+
+/*
+proc mapimport out=PUMA_shp
+  datafile="&_dcdata_r_path\NCHsg\Maps\tl_2018_37_puma10.shp";  
+run;
+
+proc sort data=PUMA_shp; by GEOID10;
+run;
+
+goptions reset=global border;
+
+data Allassistedunits2;
+set Allassistedunits;
+lat= Latitude;
+long= longitude;
+run;
+proc gproject latlon
+project=proj4 to="EPSG:32618"  
+data=Allassistedunits2 out=Allassistedunits3;
+id NHPDPropertyID;
+run;
+proc ginside includeborder
+  data=Allassistedunits3
+  map=PUMA_shp
+  out=PUMA_shp_join;
+  id GEOID10;
+run;
+*/
 data Work.SubsidyCategories;
 	set Work.Allassistedunits;
 
