@@ -12,23 +12,6 @@ We would like to be able to understand where properties are located,
 how many units are subsidized (at what level if known), 
 subsidy programs involved, and any expiration dates for the subsidies.
 
-We want all jurisdictions in the COG region:
-
-DC (11001)
-Charles Couty(24017)
-Frederick County(24021)
-Montgomery County (24031)
-Prince George's County(24033)
-Arlington County (51013)
-Fairfax County (51059)
-Loudoun County (51107)
-Prince William County (51153)
-Alexandria City (51510)
-Fairfax City (51600)
-Falls Church City (51610)
-Manassas City (51683)
-Manassas Park City (51685)
-
  Modifications:2/10/20 YS adapted for NC Housing
 **************************************************************************/
 
@@ -143,73 +126,6 @@ run;
 proc means data=Work.Allassistedunits n sum mean min max;
 run;
 
-proc export data=Allassistedunits
- 	outfile="&_dcdata_default_path\NCHsg\Prog\Allassistedunits.csv"
-   dbms=csv
-   replace;
-   run;
-
-/*geocode units in puma in arcgis and import back*/
-*this macro pads s variable with leading zeros;
-%macro zpad(s);
-    * first, recommend aligning the variable values to the right margin to create leading blanks, if they dont exist already;
-	&s. = right(&s.);
-
-	* then fill them with zeros;
-	if trim(&s.) ~= "" then do;	
-		do _i_ = 1 to length(&s.) while (substr(&s.,_i_,1) = " ");
-			substr(&s.,_i_,1) = "0";
-		end;
-	end;
-%mend zpad;
-
-
-data Allassistedunits_geo;
-set NCHsg.NCassistedunits;
-run;
-proc sort data = Allassistedunits_geo;
-by PUMACE10;
-run;
-data categories (drop=_i_);
-set NCHsg.cat_by_puma (drop=pumace10);
-length pumace10 $5;
-pumace10=puma;
-%zpad(pumace10); *= translate(right(pumace10),'0', '');
-run;
-
-data Allassistedunits_geo2 ;
-merge Allassistedunits_geo(in=a) categories;
-if a;
-by PUMACE10;
-run;
-
-/*
-proc mapimport out=PUMA_shp
-  datafile="&_dcdata_r_path\NCHsg\Maps\tl_2018_37_puma10.shp";  
-run;
-
-proc sort data=PUMA_shp; by GEOID10;
-run;
-
-goptions reset=global border;
-
-data Allassistedunits2;
-set Allassistedunits;
-lat= Latitude;
-long= longitude;
-run;
-proc gproject latlon
-project=proj4 to="EPSG:32618"  
-data=Allassistedunits2 out=Allassistedunits3;
-id NHPDPropertyID;
-run;
-proc ginside includeborder
-  data=Allassistedunits3
-  map=PUMA_shp
-  out=PUMA_shp_join;
-  id GEOID10;
-run;
-*/
 data Work.SubsidyCategories;
 	set Work.Allassistedunits;
 
@@ -393,7 +309,6 @@ ods csvall  body="&_dcdata_default_path\NCHsg\Prog\Subsidized_unit_counts_unique
 title3 "Project and assisted unit unique counts";
 
 proc tabulate data=Work.ConstructionDates  format=comma10. noseps missing;
-  where COGRegion=1;
   class ProgCat / preloadfmt order=data;
   var mid_assistedunits moe_assistedunits;
   table
@@ -414,7 +329,6 @@ title3 "Projects and assisted units breakdown by jurisdiction";
 
 
 proc tabulate data=Work.ConstructionDates format=comma10. noseps missing;
-  where COGRegion=1 and not missing(jurisdiction);
   class ProgCat / preloadfmt order=data;
   class jurisdiction;
   var mid_assistedunits moe_assistedunits;
@@ -437,7 +351,6 @@ title3 "Projects and assisted units with expiring subsidies";
 footnote1 "LIHTC expiration includes 15-year compliance and 30-year subsidy end dates.";
 
 proc tabulate data=Work.ConstructionDates format=comma10. noseps missing;
-  where COGRegion=1 and not missing(earliest_expirationdate15);
   class ProgCat / preloadfmt order=data;
   class earliest_expirationdate15;
   var mid_assistedunits moe_assistedunits;
@@ -461,7 +374,7 @@ title3 "Section 8 projects and assisted units with expiring subsidies";
 footnote1;
 
 proc tabulate data=Work.ConstructionDates format=comma10. noseps missing;
-  where COGRegion=1 and not missing(s8_endyr);
+  where not missing(s8_endyr);
   class s8_endyr;
   var s8_all_assistedunits;
   table 
@@ -483,7 +396,7 @@ title3 "Section 202 projects and assisted units with expiring subsidies";
 footnote1;
 
 proc tabulate data=Work.ConstructionDates format=comma10. noseps missing;
-  where COGRegion=1 and not missing(s202_endyr);
+  where not missing(s202_endyr);
   class s202_endyr;
   var s202_all_assistedunits;
   table 
@@ -505,7 +418,7 @@ title3 "Section 236 projects and assisted units with expiring subsidies";
 footnote1;
 
 proc tabulate data=Work.ConstructionDates format=comma10. noseps missing;
-  where COGRegion=1 and not missing(s236_endyr);
+  where not missing(s236_endyr);
   class s236_endyr;
   var s236_all_assistedunits;
   table 
@@ -527,7 +440,7 @@ title3 "FHA projects and assisted units with expiring subsidies";
 footnote1;
 
 proc tabulate data=Work.ConstructionDates format=comma10. noseps missing;
-  where COGRegion=1 and not missing(FHA_endyr);
+  where not missing(FHA_endyr);
   class FHA_endyr;
   var FHA_all_assistedunits;
   table 
@@ -549,7 +462,7 @@ title3 "LIHTC projects and assisted units with expiring subsidies";
 footnote1;
 
 proc tabulate data=Work.ConstructionDates format=comma10. noseps missing;
-  where COGRegion=1 and not missing(LIHTC_endyr);
+  where not missing(LIHTC_endyr);
   class LIHTC_endyr;
   var LIHTC_all_assistedunits;
   table 
@@ -571,7 +484,7 @@ title3 "LIHTC projects and assisted units with expiring subsidies, 15 year dates
 footnote1;
 
 proc tabulate data=Work.ConstructionDates format=comma10. noseps missing;
-  where COGRegion=1 and not missing(LIHTC_15yr);
+  where not missing(LIHTC_15yr);
   class LIHTC_15yr;
   var LIHTC_all_assistedunits;
   table 
@@ -593,7 +506,7 @@ title3 "RHS 515 projects and assisted units with expiring subsidies";
 footnote1;
 
 proc tabulate data=Work.ConstructionDates format=comma10. noseps missing;
-  where COGRegion=1 and not missing(RHS515_endyr);
+  where not missing(RHS515_endyr);
   class RHS515_endyr;
   var RHS515_all_assistedunits;
   table 
@@ -615,7 +528,7 @@ title3 "RHS 538 projects and assisted units with expiring subsidies";
 footnote1;
 
 proc tabulate data=Work.ConstructionDates format=comma10. noseps missing;
-  where COGRegion=1 and not missing(RHS538_endyr);
+  where not missing(RHS538_endyr);
   class RHS538_endyr;
   var RHS538_all_assistedunits;
   table 
@@ -637,7 +550,7 @@ title3 "HOME projects and assisted units with expiring subsidies";
 footnote1;
 
 proc tabulate data=Work.ConstructionDates format=comma10. noseps missing;
-  where COGRegion=1 and not missing(HOME_endyr);
+  where not missing(HOME_endyr);
   class HOME_endyr;
   var HOME_all_assistedunits;
   table 
@@ -658,7 +571,7 @@ ods csvall  body="&_dcdata_default_path\NCHsg\Prog\PH_unit_counts.csv";
 title3 "Public housing projects and assisted units with latest construction dates";
 
 proc tabulate data=Work.ConstructionDates format=comma10. noseps missing;
-  where COGRegion=1 and not missing(PHConstructionDate);
+  where not missing(PHConstructionDate);
   class ProgCat / preloadfmt order=data;
   class timecount;
   var mid_assistedunits moe_assistedunits;

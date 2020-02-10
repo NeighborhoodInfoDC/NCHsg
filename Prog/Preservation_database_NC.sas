@@ -827,17 +827,14 @@ var NHPDPropertyID PropertyName PropertyAddress City State Zip PropertyStatus To
 run;
 proc contents data=test;
 run;
-
 proc freq data=test;
 tables city;
 run;
-
 proc export data=test
  	outfile="&_dcdata_default_path\NCHsg\Prog\Allassistedunits.csv"
    dbms=csv
    replace;
    run;
-
 
 /*
 proc mapimport out=PUMA_shp
@@ -907,7 +904,7 @@ data=test_geo2,
 out=natlpres_ActiveandInc_prop_NC,
 outlib=NCHsg,
 label="National Preservation Database Active and Inconclusive Properties 1/2020 North Carolina",
-sortby=EarliestStartDate,
+sortby=EARLIESTST,
 /** Metadata parameters **/
 revisions=%str(New file.),
 register_metadata=N,
