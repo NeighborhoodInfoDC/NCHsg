@@ -878,18 +878,29 @@ run;
 %mend zpad;
 
 data test_geo;
-set NCHsg.NCassistedunits;
+set NCHsg.NCassistedunits (keep=pumace10  NHPDPROPER);
+
+rename NHPDPROPER=NHPDPropertyID;
+run; 
+proc sort data=test;
+by NHPDPropertyID;
+proc sort data=test_geo;
+by NHPDPropertyID;
+data NHPD_w_geo;
+merge test (in=a) test_geo;
+by NHPDPropertyID;
+
 run;
-proc sort data = test_geo;
-by PUMACE10;
-run;
+
 data categories (drop=_i_);
 set NCHsg.cat_by_puma (drop=pumace10);
 length pumace10 $5;
 pumace10=puma;
 %zpad(pumace10); *= translate(right(pumace10),'0', '');
 run;
-
+proc sort data = test_geo;
+by PUMACE10;
+run;
 data test_geo2 ;
 merge test_geo(in=a) categories;
 if a;
