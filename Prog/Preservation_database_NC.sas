@@ -818,8 +818,8 @@ label	State_2_ConstructionType="State construction type";
 label   OldNHPDPropertyID="Old NHPD Property ID";
 
 if NHPDPropertyID="1145823" then CountyCode="37089"; 
-*need to add manual code to assign other properties missing county to a county code;
 
+NHPDPropertyID_new = input(NHPDPropertyID, 8.);
 run;
 proc print data=test;
 where CountyCode=" ";
@@ -878,20 +878,30 @@ run;
 %mend zpad;
 
 data test_geo;
-set NCHsg.NCassistedunits;
+set NCHsg.NCassistedunits (keep=pumace10  NHPDPROPER);
+rename NHPDPROPER=NHPDPropertyID_new;
+run; 
+proc sort data=test;
+by NHPDPropertyID_new;
+proc sort data=test_geo;
+by NHPDPropertyID_new;
+
+data NHPD_w_geo;
+merge test (in=a) test_geo;
+by NHPDPropertyID_new;
 run;
-proc sort data = test_geo;
-by PUMACE10;
-run;
+
 data categories (drop=_i_);
 set NCHsg.cat_by_puma (drop=pumace10);
 length pumace10 $5;
 pumace10=puma;
 %zpad(pumace10); *= translate(right(pumace10),'0', '');
 run;
-
+proc sort data = NHPD_w_geo;
+by PUMACE10;
+run;
 data test_geo2 ;
-merge test_geo(in=a) categories;
+merge NHPD_w_geo(in=a) categories;
 if a;
 by PUMACE10;
 run;
@@ -904,7 +914,7 @@ data=test_geo2,
 out=natlpres_ActiveandInc_prop_NC,
 outlib=NCHsg,
 label="National Preservation Database Active and Inconclusive Properties 1/2020 North Carolina",
-sortby=EARLIESTST,
+sortby=EarliestStartDate,
 /** Metadata parameters **/
 revisions=%str(New file.),
 register_metadata=N,

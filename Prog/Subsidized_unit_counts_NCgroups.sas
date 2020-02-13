@@ -1,5 +1,5 @@
 /**************************************************************************
- Program:  Subsidized_units_counts_NC.sas
+ Program:  Subsidized_units_counts_NCgroups.sas
  Library:  NCHsg
  Project:  NeighborhoodInfo DC
  Author:   W. Oliver
@@ -12,7 +12,7 @@ We would like to be able to understand where properties are located,
 how many units are subsidized (at what level if known), 
 subsidy programs involved, and any expiration dates for the subsidies.
 
- Modifications:2/10/20 YS adapted for NC Housing
+ Modifications:2/12/20 YS adapted for NC Housing
 **************************************************************************/
 
 %include "L:\SAS\Inc\StdLocal.sas";
@@ -277,9 +277,10 @@ label
   run;
 
 *Create construction dates for affordable housing;
+%macro subsidizedunits(group);
 
 data Work.ConstructionDates;
-  set Work.SubsidyExpirationDates;
+  set Work.SubsidyExpirationDates (where= (Category= &group.));
   format LatestConstructionDate MMDDYY10.;
 if ProgCat in (1,2) then PHConstructionDate=LatestConstructionDate;
 If 1930 <= year (PHConstructionDate) <= 1950 then timecount = '1930-1950';
@@ -304,7 +305,7 @@ run;
 
 options missing=' ';
 
-ods csvall  body="&_dcdata_default_path\NCHsg\Prog\Subsidized_unit_counts_unique.csv";
+ods csvall  body="&_dcdata_default_path\NCHsg\Prog\Subsidized_unit_counts_unique_&group..csv";
 
 title3 "Project and assisted unit unique counts";
 
@@ -323,7 +324,7 @@ run;
 
 ods csvall close;
 
-ods csvall  body="&_dcdata_default_path\NCHsg\Prog\Subsidized_unit_counts_jurisdiction.csv";
+ods csvall  body="&_dcdata_default_path\NCHsg\Prog\Subsidized_unit_counts_&group..csv";
 
 title3 "Projects and assisted units breakdown by jurisdiction";
 
@@ -337,7 +338,7 @@ proc tabulate data=Work.ConstructionDates format=comma10. noseps missing;
     all='Total' ProgCat=' ',
     /** Columns **/
     n='Projects'    
-    sum='Assisted Units By Jurisdiction' * (  all='Total' jurisdiction=' ' ) 
+    sum='Assisted Units By Group' * (  all='Total' jurisdiction=' ' ) 
       * (  mid_assistedunits='Est.' moe_assistedunits='+/-' )
     ;
   format ProgCat ProgCat. jurisdiction jurisdiction.;
@@ -345,7 +346,7 @@ run;
 
 ods csvall close;
 
-ods csvall  body="&_dcdata_default_path\NCHsg\Prog\Subsidized_unit_counts_expire.csv";
+ods csvall  body="&_dcdata_default_path\NCHsg\Prog\Subsidized_unit_counts_expire_&group..csv";
 
 title3 "Projects and assisted units with expiring subsidies";
 footnote1 "LIHTC expiration includes 15-year compliance and 30-year subsidy end dates.";
@@ -368,7 +369,7 @@ run;
 ods csvall close;
 
 /*Section 8*/
-ods csvall body="&_dcdata_default_path\NCHsg\Prog\Subsidized_unit_counts_s8.csv";
+ods csvall body="&_dcdata_default_path\NCHsg\Prog\Subsidized_unit_counts_s8_&group..csv";
 
 title3 "Section 8 projects and assisted units with expiring subsidies";
 footnote1;
@@ -390,7 +391,7 @@ run;
 ods csvall close;
 
 /*S202*/
-ods csvall body="&_dcdata_default_path\NCHsg\Prog\Subsidized_unit_counts_s202.csv";
+ods csvall body="&_dcdata_default_path\NCHsg\Prog\Subsidized_unit_counts_s202_&group..csv";
 
 title3 "Section 202 projects and assisted units with expiring subsidies";
 footnote1;
@@ -412,7 +413,7 @@ run;
 ods csvall close;
 
 /*S236*/
-ods csvall body="&_dcdata_default_path\NCHsg\Prog\Subsidized_unit_counts_s236.csv";
+ods csvall body="&_dcdata_default_path\NCHsg\Prog\Subsidized_unit_counts_s236_&group..csv";
 
 title3 "Section 236 projects and assisted units with expiring subsidies";
 footnote1;
@@ -434,7 +435,7 @@ run;
 ods csvall close;
 
 /*FHA*/
-ods csvall body="&_dcdata_default_path\NCHsg\Prog\Subsidized_unit_counts_FHA.csv";
+ods csvall body="&_dcdata_default_path\NCHsg\Prog\Subsidized_unit_counts_FHA_&group..csv";
 
 title3 "FHA projects and assisted units with expiring subsidies";
 footnote1;
@@ -456,7 +457,7 @@ run;
 ods csvall close;
 
 /*LIHTC*/
-ods csvall body="&_dcdata_default_path\NCHsg\Prog\Subsidized_unit_counts_LIHTC.csv";
+ods csvall body="&_dcdata_default_path\NCHsg\Prog\Subsidized_unit_counts_LIHTC_&group..csv";
 
 title3 "LIHTC projects and assisted units with expiring subsidies";
 footnote1;
@@ -478,7 +479,7 @@ run;
 ods csvall close;
 
 /*LIHTC-15year*/
-ods csvall body="&_dcdata_default_path\NCHsg\Prog\Subsidized_unit_counts_LIHTC15yr.csv";
+ods csvall body="&_dcdata_default_path\NCHsg\Prog\Subsidized_unit_counts_LIHTC15yr_&group..csv";
 
 title3 "LIHTC projects and assisted units with expiring subsidies, 15 year dates";
 footnote1;
@@ -500,7 +501,7 @@ run;
 ods csvall close;
 
 /*RHS515*/
-ods csvall body="&_dcdata_default_path\NCHsg\Prog\Subsidized_unit_counts_rhs515.csv";
+ods csvall body="&_dcdata_default_path\NCHsg\Prog\Subsidized_unit_counts_rhs515_&group..csv";
 
 title3 "RHS 515 projects and assisted units with expiring subsidies";
 footnote1;
@@ -522,7 +523,7 @@ run;
 ods csvall close;
 
 /*RHS538*/
-ods csvall body="&_dcdata_default_path\NCHsg\Prog\Subsidized_unit_counts_rhs538.csv";
+ods csvall body="&_dcdata_default_path\NCHsg\Prog\Subsidized_unit_counts_rhs538_&group..csv";
 
 title3 "RHS 538 projects and assisted units with expiring subsidies";
 footnote1;
@@ -544,7 +545,7 @@ run;
 ods csvall close;
 
 /*HOME*/
-ods csvall body="&_dcdata_default_path\NCHsg\Prog\Subsidized_unit_counts_HOME.csv";
+ods csvall body="&_dcdata_default_path\NCHsg\Prog\Subsidized_unit_counts_HOME_&group..csv";
 
 title3 "HOME projects and assisted units with expiring subsidies";
 footnote1;
@@ -566,7 +567,7 @@ run;
 ods csvall close;
 
 /*Public Housing*/
-ods csvall  body="&_dcdata_default_path\NCHsg\Prog\PH_unit_counts.csv";
+ods csvall  body="&_dcdata_default_path\NCHsg\Prog\PH_unit_counts_&group..csv";
 
 title3 "Public housing projects and assisted units with latest construction dates";
 
@@ -587,3 +588,12 @@ proc tabulate data=Work.ConstructionDates format=comma10. noseps missing;
 run;
 
 ods csvall close;
+
+%mend subsidizedunits;
+
+%subsidizedunits(1);
+%subsidizedunits(2);
+%subsidizedunits(3);
+%subsidizedunits(4);
+%subsidizedunits(5);
+%subsidizedunits(6);
