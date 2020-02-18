@@ -944,17 +944,17 @@ proc tabulate data=NCHsg.fiveyeartotal_othervacant  format=comma12. noseps missi
   *format county2_char county2_char.;
 run;
 
-proc freq data=NCHsg.fiveyeartotal_othervacant ;
-by category;
-tables vacancy /nopercent norow nocol out=other_vacant;
-weight hhwt_geo;
-*format county2_char county2_char.;
-run; 
 
 
 proc sort data= fiveyeartotal_othervacant_cat ;
 by category;
 run;
+proc freq data=fiveyeartotal_othervacant_cat ;
+by category;
+tables vacancy /nopercent norow nocol out=other_vacant;
+weight hhwt_geo;
+*format county2_char county2_char.;
+run; 
 
 proc freq data=fiveyeartotal_othervacant_cat ;
 by category;
