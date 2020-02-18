@@ -935,7 +935,7 @@ run;
  run;
 
 proc tabulate data=NCHsg.fiveyeartotal_othervacant  format=comma12. noseps missing;
-  class category;
+  class county2_char;
   var hhwt_geo hhwt_ori;
   table
     all='Total' county2_char=' ',
