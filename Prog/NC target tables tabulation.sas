@@ -114,7 +114,19 @@ proc export data=other_vacant
    dbms=csv
    replace;
    run;
-
+proc sort data=nchsg.fiveyeartotal_othervacant out=fiveyeartotal_othervacant_cat;
+by category;
+proc freq data=fiveyeartotal_othervacant_cat;
+by category;
+tables vacancy /nopercent norow nocol out=other_vacant_cat;
+weight hhwt_geo;
+*format county2_char county2_char.;
+run; 
+proc export data=other_vacant_cat
+ 	outfile="&_dcdata_default_path\NCHsg\Prog\other_vacant_cat_&date..csv"
+   dbms=csv
+   replace;
+   run;
 /*tabulate percent cost burdened by category and income quintiles*/
 
 proc freq data=nchsg.fiveyeartotal;
@@ -416,18 +428,22 @@ run;
 
 
 /*unsubsidized low cost stock*/
-
+proc freq  data=rental;
+tables UNITSSTR;
+run; 
 data rental;
-set nchsg.fiveyeartotal (where= (tenure=1));
-if rentgrs=<700 then delete;
-if UNITSSTR = 00 then substrucutre=5;
-if UNITSSTR in (01, 02) then substrucutre=4;
-if UNITSSTR in (03, 04) then substrucutre=1;
-if UNITSSTR in (05, 06) then substrucutre=2;
-if UNITSSTR in (07, 08, 09, 10) then substrucutre=3;
-run;
+set nchsg.fiveyeartotal (where= (tenure=1)) nchsg.fiveyeartotal_vacant (where= (tenure=1));
 
+if UNITSSTR = 00 then substrucutre=5;
+if UNITSSTR in (01, 02) then substrucutre=3; *Mobile home, boat, etc. ;
+if UNITSSTR in (03, 04) then substrucutre=1; *single family;
+if UNITSSTR in (05, 06) then substrucutre=1; *2-4 units;
+if UNITSSTR in (07, 08, 09, 10) then substrucutre=2; *5+ units;
+run;
+proc sort data=rental;
+by category;
 proc freq data=rental;
+where affordable=1 | affordable_vacant=1;
 by category;
 tables substrucutre*structureyear /nopercent norow nocol out=geo_lowcost;
 weight hhwt_geo;
