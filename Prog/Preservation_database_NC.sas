@@ -889,7 +889,19 @@ by NHPDPropertyID_new;
 data NHPD_w_geo;
 merge test (in=a) test_geo;
 by NHPDPropertyID_new;
+
+ *counties with multiple PUMAs; 
+ if CountyCode ="37183" then PUMACE10="01201"; 
+ if countycode= "37081" then PUMACE10="01701";
+ if countycode= "37021" then PUMACE10="02201";
+ if countycode= "37063" then PUMACE10="01301";
+ if countycode= "37067" then PUMACE10="01801";
+ if countycode= "37071" then PUMACE10="03001";
+ if countycode= "37119" then PUMACE10="03101";
+ if countycode= "37051" then PUMACE10="05001";
+
 run;
+
 
 data categories (drop=_i_);
 set NCHsg.cat_by_puma (drop=pumace10);
@@ -904,6 +916,23 @@ data test_geo2 ;
 merge NHPD_w_geo(in=a) categories;
 if a;
 by PUMACE10;
+
+*PUMAs that are grouped; 
+ if countycode= "37097" then do; category=2;  county2_char="1900 or 2900"; end;
+ if countycode= "37129" then do; category=2;  county2_char="4600 or 4700"; end;
+ if countycode= "37133" then do; category=3;  county2_char="4100 or 4500"; end; 
+ if countycode= "37155" then do; category=4;  county2_char="4900 or 5100"; end;
+
+ *Projects that got spatially joined to PUMA and missing county; 
+ if PUMACE10 in ("01204" "01208") then do; CountyCode ="37183"; category=1; end; 
+ if PUMACE10 = "01302" then do; countycode= "37063"; category=1; end; 
+ if PUMACE10= "01802" then do; countycode="37067"; category=1; end;
+ 
+run; 
+
+*confirm no missing;
+proc freq data=test_geo2;
+tables category;
 run;
 
 /*finalize dataset*/
