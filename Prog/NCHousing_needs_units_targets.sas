@@ -84,8 +84,8 @@ proc format;
 	;
   value structure
 	1= 'Single family attached and detached'
-	2= '2-9 units in strucutre'
-	3= '10+ units in strucutre'
+	2= '2-9 units in structure'
+	3= '10+ units in structure'
 	4= 'Mobile or other'
 	5= 'NA'
 	;
@@ -452,8 +452,8 @@ data Housing_needs_vacant_&year. Other_vacant_&year. ;
 			
 			  	if rent in ( 9999999, .n , . ) then affordable_vacant=.;
 		else do; 
-		    if rentgrs_a<750 then affordable_vacant=1;
-			else if rentgrs_a>=750 then affordable_vacant=0;
+		    if rentgrs_a<700 then affordable_vacant=1;
+			else if rentgrs_a>=700 then affordable_vacant=0;
 
 		end;
 
