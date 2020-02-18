@@ -40,7 +40,7 @@
 %DCData_lib( NCHsg )
 %DCData_lib( Ipums )
 
-%let date=12072019Alt; 
+%let date=02182020Alt; 
 
 proc format;
 
@@ -106,62 +106,16 @@ proc format;
   	  
 	  value afford
 
-  1= 'natural affordable (rent < $70)'
+  1= 'natural affordable (rent < $700)'
   0= 'not natural affordable';
 run;
-data categories;
-set NCHsg.Puma_categories_121;
-run;
 
-/*read in dataset created by NCHousing_needs_units_targets.sas*/
-data fiveyeartotal2;
-	set NCHsg.fiveyeartotal_alt ;
-	by county2_char;
-	retain group 0;
-	if first.county2_char then group=group+1;
-	drop county;
-run;
-data fiveyeartotal;
-merge fiveyeartotal2(in=a) categories;
-if a;
-by group ;
-run;
+/*read in dataset created by NCHousing_needs_units_targets_alt.sas*/
 
- data fiveyeartotal_vacant2; 
-   set NCHsg.fiveyeartotal_vacant_alt;
-   	by county2_char;
-	retain group 0;
-	if first.county2_char then group=group+1;
- run;
-
- data fiveyeartotal_vacant;
-merge fiveyeartotal_vacant2(in=a) categories;
-if a;
-by group ;
-run;
-
- data fiveyeartotal_othervacant2; 
-   set NCHsg.fiveyeartotal_othervacant_alt ;
-   	by county2_char;
-	retain group 0;
-	if first.county2_char then group=group+1;
- run;
-
- data fiveyeartotal_othervacant;
-merge fiveyeartotal_othervacant2(in=a) categories;
-if a;
-by group ;
-run;
-
-proc export data=fiveyeartotal_othervacant
- 	outfile="&_dcdata_default_path\NCHsg\Prog\other_vacant_&date..csv"
-   dbms=csv
-   replace;
-   run;
 
 /*data set for all units that we can determine cost level*/ 
 data all(label= "NC all regular housing units 13-17 pooled");;
-	set fiveyeartotal fiveyeartotal_vacant (in=a);
+	set nchsg.fiveyeartotal_alt nchsg.fiveyeartotal_vacant_alt (in=a);
 	if a then inc=6; 
 format inc inc_cat.;
 run; 
@@ -253,13 +207,13 @@ var count;
 run;
 
 proc export data=ru2
- 	outfile="&_dcdata_default_path\NCHsg\Prog\Current_housing_cost_&date..csv"
+ 	outfile="&_dcdata_default_path\NCHsg\Prog\Current_housing_cost_cat_&date..csv"
    dbms=csv
    replace;
    run;
 
 /*jurisdiction desired units*/
-proc sort data=fiveyeartotal;
+proc sort data= nchsg.fiveyeartotal_alt out=fiveyeartotal;
 by inc; 
 proc freq data=fiveyeartotal;
 *by county2_char;
@@ -381,7 +335,7 @@ proc export data=couldpaymore
    replace;
    run;
 
-proc sort data= fiveyeartotal_vacant;
+proc sort data=nchsg.fiveyeartotal_vacant_alt out=fiveyeartotal_vacant;
 by category;
 run;
 

@@ -32,7 +32,7 @@
 %DCData_lib( NCHsg )
 %DCData_lib( Ipums )
 
-%let date=01152020; 
+%let date=02182020; 
 
 proc format;
 
