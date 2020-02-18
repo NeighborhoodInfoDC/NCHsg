@@ -101,15 +101,16 @@ proc format;
   0= 'not natural affordable'; 
 run;
 
-
-proc freq data=nchsg.fiveyeartotal_othervacant;
+proc sort data=nchsg.fiveyeartotal_othervacant out=fiveyeartotal_othervacant;
+by county2_char;
+proc freq data=fiveyeartotal_othervacant;
 by county2_char;
 tables vacancy /nopercent norow nocol out=other_vacant;
 weight hhwt_geo;
 *format county2_char county2_char.;
 run; 
 proc export data=other_vacant
- 	outfile="&_dcdata_default_path\NCHsg\Prog\other_vacant_&date..csv"
+ 	outfile="&_dcdata_default_path\NCHsg\Prog\other_vacant_PUMA_&date..csv"
    dbms=csv
    replace;
    run;
@@ -230,11 +231,6 @@ ID allcostlevel;
 var percent;
 run;
 
-proc transpose data=structurecost out=structurecost2;
-by structure ;
-ID allcostlevel;
-var total;
-run;
 
 
 proc export data=allcostcat
@@ -268,6 +264,7 @@ run;
 proc sort data= structurecost;
 by structure;
 run;
+
 
 proc transpose data=structurecost out=structurecost2;
 by structure ;
@@ -438,7 +435,7 @@ weight hhwt_geo;
 run;
 
 proc sort data=geo_lowcost;
-by category substructure structureyear;
+by category substrucutre structureyear;
 run;
 
 proc transpose data=geo_lowcost out=geo_lowcost2
