@@ -655,12 +655,14 @@ run;
 proc summary data= fiveyeartotal1(where=(numprec=4));
 by hud_inc tenure;
 var HHincome_a owncost_a rentgrs_a;
+weight hhwt; 
 output out= incomecategories mean=;
 run;
 
 proc summary data= fiveyeartotal1(where=(numprec=4));
 by hud_inc;
 var HHincome_a owncost_a rentgrs_a;
+weight hhwt; 
 output out= combinedcat mean=;
 run;
 
