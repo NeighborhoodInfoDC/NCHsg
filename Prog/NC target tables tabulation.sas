@@ -428,11 +428,9 @@ run;
 
 
 /*unsubsidized low cost stock*/
-proc freq  data=rental;
-tables UNITSSTR;
-run; 
-data rental;
-set nchsg.fiveyeartotal (where= (tenure=1)) nchsg.fiveyeartotal_vacant (where= (tenure=1));
+
+data affordable;
+set nchsg.fiveyeartotal  nchsg.fiveyeartotal_vacant ;
 
 if UNITSSTR = 00 then substrucutre=5;
 if UNITSSTR in (01, 02) then substrucutre=3; *Mobile home, boat, etc. ;
@@ -440,10 +438,10 @@ if UNITSSTR in (03, 04) then substrucutre=1; *single family;
 if UNITSSTR in (05, 06) then substrucutre=1; *2-4 units;
 if UNITSSTR in (07, 08, 09, 10) then substrucutre=2; *5+ units;
 run;
-proc sort data=rental;
+proc sort data=affordable;
 by category;
-proc freq data=rental;
-where affordable=1 | affordable_vacant=1;
+proc freq data=affordable;
+where (affordable=1 | affordable_vacant=1) and tenure=1;
 by category;
 tables substrucutre*structureyear /nopercent norow nocol out=geo_lowcost;
 weight hhwt_geo;
@@ -467,7 +465,69 @@ proc export data=geo_lowcost2
 	replace;
 run;
 
+*owner-occ mobile homes - low cost by year;
+data affordable_mob;
+	set affordable;
 
+	if tenure=2 then do;
+		if owncost in ( 9999999, .n , . ) then affordable=.;
+			else do; 
+			    if owncost_a<700 then affordable=1;
+				else if owncost_a>=700 then affordable=0;
+				
+			end;
 
+	    if vacancy ~= . then do;
+			   if total_month < 700 then affordable=1;
+			   else if total_month>=700 then affordable=0;
 
+			end;
+	end;
 
+run; 
+proc sort data=affordable_mob;
+by category;
+proc freq data=affordable_mob;
+where (affordable=1 and tenure=2);
+by category;
+tables substrucutre*structureyear /nopercent norow nocol out=geo_lowcost_own;
+weight hhwt_geo;
+*format county2_char county2_char. mallcostlevel;
+run;
+
+proc sort data=geo_lowcost_own;
+by category substrucutre structureyear;
+run;
+
+proc transpose data=geo_lowcost_own out=geo_lowcost_own2
+prefix= level;
+id structureyear;
+by category substrucutre;
+var count;
+run;
+
+proc export data=geo_lowcost_own2
+	outfile="&_dcdata_default_path\NCHsg\Prog\geo_lowcost_own_&date..csv"
+	dbms=csv
+	replace;
+	run;
+
+**age of mobile homes in detail;
+
+data affordable_mob2;
+ set affordable_mob;
+
+ 	if BUILTYR2 in ( 00, 9999999, .n , . ) then structureyear_alt=.;
+		else do; 
+		    if BUILTYR2  in (08, 09, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22) then structureyear_alt=1;
+			else if BUILTYR2  in (07) then structureyear_alt=2; *1990-1999;
+			else if BUILTYR2  in (05, 06) then structureyear_alt=3; *1970-89;
+			else if BUILTYR2  in (04) then structureyear_alt=4; *1960-1969; 
+            else if BUILTYR2 in (01, 02, 03)  then structureyear_alt=5; *before 1960;
+		end;
+run;
+proc freq data=affordable_mob2;
+where UNITSSTR=01;
+tables category*structureyear_alt /nopercent norow nocol out=geo_all_mob;
+weight hhwt_geo;
+run; 
