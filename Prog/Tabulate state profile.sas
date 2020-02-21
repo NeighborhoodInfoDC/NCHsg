@@ -230,13 +230,19 @@ proc export data=hhprofile
 /**************************************************************************
 Housing profile
 **************************************************************************/
- data fiveyeartotal_vacant; 
+proc sort data= NCHsg.fiveyeartotal_vacant;
+by county2_char;
+run;
+
+data fiveyeartotal_vacant; 
    set NCHsg.fiveyeartotal_vacant;
 	by county2_char;
 	retain group 0;
 	if first.county2_char then group=group+1;
  run;
-
+proc sort data= NCHsg.fiveyeartotal_othervacant;
+by county2_char;
+run;
  data fiveyeartotal_othervacant; 
    set NCHsg.fiveyeartotal_othervacant ;
 	by county2_char;
@@ -280,6 +286,28 @@ run;
 
 proc export data=vacancy_group2
  	outfile="&_dcdata_default_path\NCHsg\Prog\state_units_&date..csv"
+   dbms=csv
+   replace;
+   run;
+
+ proc sort data= fiveyeartotal_othervacant;
+ by group;
+ run;
+
+/*other vacant*/
+data othervacant;
+merge fiveyeartotal_othervacant (in=a) categories;
+if a;
+by group ;
+run;
+
+proc freq data=othervacant;
+tables Category /nopercent norow nocol out=vacancy_other;
+weight hhwt_geo;
+run;
+
+proc export data=vacancy_other
+ 	outfile="&_dcdata_default_path\NCHsg\Prog\othervacant_units_&date..csv"
    dbms=csv
    replace;
    run;
