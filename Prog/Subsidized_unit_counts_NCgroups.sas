@@ -72,6 +72,7 @@ data Work.Allassistedunits;
 	HOME_all_assistedunits=min(sum(HOME_1_AssistedUnits, HOME_2_AssistedUnits,0),TotalUnits);
 	PH_all_assistedunits=min(sum(PH_1_AssistedUnits, PH_2_AssistedUnits,0),TotalUnits);
 	State_all_assistedunits=min(sum(State_1_AssistedUnits, State_2_AssistedUnits,0),TotalUnits);
+
 	drop s8_1_AssistedUnits s8_2_AssistedUnits s202_1_assistedunits s202_2_assistedunits
 	s236_1_AssistedUnits s236_2_AssistedUnits FHA_1_AssistedUnits FHA_2_AssistedUnits
 	LIHTC_1_AssistedUnits LIHTC_2_AssistedUnits RHS515_1_AssistedUnits RHS515_2_AssistedUnits
@@ -117,6 +118,11 @@ data Work.Allassistedunits;
 	if State_all_assistedunits > 0
 	then State_activeunits = 1;
 	else State_activeunits = 0;
+
+	* for some reason not assigned RH units but have dates, balance and status; 
+	if RHS515_1_Status = "Active"  and RHS515_1_AssistedUnits in(. 0) and TotalUnits ~=. then rhs515_activeunits= 1;
+	if RHS538_1_Status = "Active"  and RHS538_1_AssistedUnits in(. 0) and TotalUnits ~=. then rhs538_activeunits= 1;
+	if LIHTC_1_Status  = "Active" and LIHTC_all_assistedunits in(. 0) and TotalUnits ~=. then LIHTC_activeunits = 1;
 
 	format State_activeunits PH_activeunits HOME_activeunits rhs538_activeunits rhs515_activeunits
 	LIHTC_activeunits FHA_activeunits s236_activeunits s202_activeunits s8_activeunits ActiveUnits.;
@@ -203,11 +209,23 @@ data Work.SubsidyExpirationDates;
 
   set Work.SubsidyCategories;
 
+	*for some reason a few are missing units even with active status;
+	If (progcat=9 and rhs515_all_assistedunits=0 and rhs538_all_assistedunits=0 and RHS515_1_Status = "Active") 
+		then rhs515_all_assistedunits=TotalUnits; 
+
+	If (progcat=9 and rhs515_all_assistedunits=0 and rhs538_all_assistedunits=0 and RHS538_1_Status = "Active") 
+		then rhs538_all_assistedunits=TotalUnits; 
+	
+	If (progcat=6 and LIHTC_all_assistedunits=0 and  LIHTC_1_Status = "Active") 
+		then LIHTC_all_assistedunits=TotalUnits; 
+
   min_assistedunits = max( s8_all_assistedunits, s202_all_assistedunits, s236_all_assistedunits,FHA_all_assistedunits,
 	LIHTC_all_assistedunits,rhs515_all_assistedunits,rhs538_all_assistedunits,HOME_all_assistedunits ,PH_all_assistedunits,0);
-	max_assistedunits = min( sum( s8_all_assistedunits, s202_all_assistedunits,s236_all_assistedunits,FHA_all_assistedunits,
+
+  max_assistedunits = min( sum( s8_all_assistedunits, s202_all_assistedunits,s236_all_assistedunits,FHA_all_assistedunits,
 	LIHTC_all_assistedunits,rhs515_all_assistedunits,rhs538_all_assistedunits,HOME_all_assistedunits ,PH_all_assistedunits,0 ), TotalUnits );
-	mid_assistedunits = min( round( mean( min_assistedunits, max_assistedunits ), 1 ), max_assistedunits );
+
+  mid_assistedunits = min( round( mean( min_assistedunits, max_assistedunits ), 1 ), max_assistedunits );
 
   if mid_assistedunits ~= max_assistedunits then moe_assistedunits = max_assistedunits - mid_assistedunits;
 
@@ -582,7 +600,7 @@ proc tabulate data=Work.ConstructionDates format=comma10. noseps missing;
     /** Columns **/
     n='Projects'    
     sum='Public housing latest construction dates' * ( all= 'Total' timecount=' ' ) 
-      * (  mid_assistedunits='Est.' moe_assistedunits='+/-' )
+	      * (  mid_assistedunits='Est.' moe_assistedunits='+/-' )
     ;
   format ProgCat ProgCat. ;
 run;
@@ -597,3 +615,23 @@ ods csvall close;
 %subsidizedunits(4);
 %subsidizedunits(5);
 %subsidizedunits(6);
+
+data estimateunitsperproject;
+	set SubsidyExpirationDates;
+
+project=1;
+run; 
+
+
+Proc sort data=estimateunitsperproject;
+by category ProgCat;
+proc summary data=estimateunitsperproject;
+by category progcat;
+var project mid_assistedunits; 
+output out=group_sum mean=avg_proj avg_units sum=sum_proj sum_units;
+run; 
+
+proc univariate data=estimateunitsperproject;
+by category progcat;
+var mid_assistedunits;
+run;
