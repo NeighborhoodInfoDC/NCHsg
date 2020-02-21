@@ -587,3 +587,31 @@ proc tabulate data=Work.ConstructionDates format=comma10. noseps missing;
 run;
 
 ods csvall close;
+
+
+/*units per project*/
+
+proc tabulate data=Work.ConstructionDates  format=comma10. noseps missing;
+  class ProgCat / preloadfmt order=data;
+  var totalunits;
+  table
+    /** Rows **/
+    all='Total' ProgCat=' ',
+    /** Columns **/
+    n='Projects'
+    sum='totalunits' * ( totalunits='Est.'  )
+    ;
+  format ProgCat ProgCat.;
+run;
+
+proc summary data= ConstructionDates;
+class ProgCat;
+var totalunits mid_assistedunits;
+output out= units_comparison sum=;
+run;
+
+data units_comparison1;
+set units_comparison (where = (_TYPE_=1));
+totalunits_per_project= TotalUnits/_FREQ_;
+assistedunits_per_project= mid_assistedunits/_FREQ_;
+run;
