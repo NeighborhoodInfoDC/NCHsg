@@ -184,6 +184,32 @@ proc export data=race_group2
    replace;
    run;
 
+/*for appendix by 45 units of geography*/
+proc freq data=fiveyeartotal_dem;
+tables group*race1 /nopercent norow nocol out=race_appendix;
+weight perwt_geo;
+run;
+proc sort data= race_appendix;
+by group;
+run;
+proc transpose data=race_appendix prefix=count out=race_appendix2;
+by group;
+ID race1;
+var count;
+run;
+
+data race_appendix3;
+set race_appendix2;
+pctwhite= count1/(count1 + count2+ count3 + count4 + count5);
+pctnonwhite= 1- pctwhite;
+run;
+
+proc export data=race_appendix3
+ 	outfile="&_dcdata_default_path\NCHsg\Prog\appendix_race_&date..csv"
+   dbms=csv
+   replace;
+   run;
+
 /*age*/
 proc freq data=fiveyeartotal_dem;
 tables Category*agegroup/nopercent norow nocol out=age_group;
@@ -203,6 +229,26 @@ proc export data=age_group2
    dbms=csv
    replace;
    run;
+proc freq data=fiveyeartotal_dem;
+tables group*agegroup/nopercent norow nocol out=age_appendix;
+weight perwt_geo;
+run;
+proc sort data= age_appendix;
+by group;
+run;
+
+proc transpose data=age_appendix prefix=count out=age_appendix2;
+by group;
+ID agegroup;
+var count;
+run;
+proc export data=age_group2
+ 	outfile="&_dcdata_default_path\NCHsg\Prog\state_age_&date..csv"
+   dbms=csv
+   replace;
+   run;
+
+
 
 /*household tabulations */
   data fiveyeartotal_occ;
