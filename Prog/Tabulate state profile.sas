@@ -236,20 +236,26 @@ run;
 proc sort data= age_appendix;
 by group;
 run;
-
 proc transpose data=age_appendix prefix=count out=age_appendix2;
 by group;
 ID agegroup;
 var count;
 run;
-proc export data=age_group2
- 	outfile="&_dcdata_default_path\NCHsg\Prog\state_age_&date..csv"
+data age_appendix3;
+set age_appendix2;
+pctunder18= count1/ (count1 + count2 + count3);
+pct18to64= count2/ (count1 + count2 + count3);
+pct64plus= count3/ (count1 + count2 + count3);
+run;
+
+proc export data=age_appendix3
+ 	outfile="&_dcdata_default_path\NCHsg\Prog\appendix_age_&date..csv"
    dbms=csv
    replace;
    run;
-
-
-
+proc sort data= NCHsg.fiveyeartotal;
+by county2_char;
+run;
 /*household tabulations */
   data fiveyeartotal_occ;
 	set NCHsg.fiveyeartotal (drop= County) ;
@@ -270,6 +276,19 @@ output out= hhprofile mean=;
 run;
 proc export data=hhprofile
  	outfile="&_dcdata_default_path\NCHsg\Prog\state_hhcat_&date..csv"
+   dbms=csv
+   replace;
+   run;
+
+/*median income and hh size by 45 units*/
+proc summary data= fiveyeartotal_dem;
+class group;
+var hhincome numprec;
+weight hhwt_geo;
+output out= medianincome mean=;
+run;
+proc export data= medianincome
+ 	outfile="&_dcdata_default_path\NCHsg\Prog\appendix_incomehhsize_&date..csv"
    dbms=csv
    replace;
    run;
@@ -296,6 +315,8 @@ run;
 	if first.county2_char then group=group+1;
  run;
 
+
+
 data all(label= "NC all regular housing units 13-17 pooled");
 	set fiveyeartotal_occ fiveyeartotal_vacant (in=a);
 	if a then inc=6; 
@@ -308,7 +329,6 @@ proc sort data=all;
 by group;
 run;
 
-/*tabulate state demographics*/
 data allunits;
 merge all(in=a) categories;
 if a;
@@ -340,7 +360,36 @@ proc export data=vacancy_group2
  by group;
  run;
 
+/*housing summary for appendix table*/
+proc summary data= fiveyeartotal_occ;
+class group;
+var total;
+weight hhwt_geo;
+output out= regular_occ sum=;
+run;
+proc export data=regular_occ
+ 	outfile="&_dcdata_default_path\NCHsg\Prog\appendix_regular_occ_&date..csv"
+   dbms=csv
+   replace;
+ run;
+ proc summary data= fiveyeartotal_vacant;
+class group;
+var total;
+weight hhwt_geo;
+output out= regular_vacant sum=;
+run;
+proc export data=regular_vacant
+ 	outfile="&_dcdata_default_path\NCHsg\Prog\appendix_regular_vacant_&date..csv"
+   dbms=csv
+   replace;
+ run;
+
 /*other vacant*/
+
+proc sort data= fiveyeartotal_othervacant;
+by group;
+run;
+
 data othervacant;
 merge fiveyeartotal_othervacant (in=a) categories;
 if a;
@@ -357,6 +406,18 @@ proc export data=vacancy_other
    dbms=csv
    replace;
    run;
+/*other vacant for appendix*/
+proc summary data= othervacant;
+class group;
+var total;
+weight hhwt_geo;
+output out= other_vacant sum=;
+run;
+proc export data=other_vacant
+ 	outfile="&_dcdata_default_path\NCHsg\Prog\appendix_other_vacant_&date..csv"
+   dbms=csv
+   replace;
+ run;
 
 /*tenure*/
 proc freq data=allunits;
@@ -374,6 +435,25 @@ var count;
 run;
 proc export data=tenure_group2
  	outfile="&_dcdata_default_path\NCHsg\Prog\state_stenure_&date..csv"
+   dbms=csv
+   replace;
+   run;
+
+/*housing tenure for appendix table*/
+proc freq data=fiveyeartotal_occ;
+tables group*tenure/nopercent norow nocol out=tenure_appendix;
+weight hhwt_geo;
+run;
+proc sort data= tenure_appendix;
+by group;
+run;
+proc transpose data=tenure_appendix prefix=count out=tenure_appendix2;
+by group;
+ID tenure;
+var count;
+run;
+proc export data=tenure_appendix2
+ 	outfile="&_dcdata_default_path\NCHsg\Prog\appendix_tenure_&date..csv"
    dbms=csv
    replace;
    run;
@@ -399,6 +479,147 @@ proc export data=structure_group2
    replace;
    run;
 
+/*structure for appendix*/
+
+proc freq data=allunits;
+tables group*structure/nopercent norow nocol out=structure_appendix;
+weight hhwt_geo;
+run;
+proc sort data= structure_appendix;
+by group;
+run;
+
+proc transpose data=structure_appendix prefix=count out=structure_appendix2;
+by group;
+ID structure;
+var count;
+run;
+proc export data=structure_appendix2
+ 	outfile="&_dcdata_default_path\NCHsg\Prog\appendix_structure_&date..csv"
+   dbms=csv
+   replace;
+   run;
+   /*other vacant structure appendix*/
+proc freq data=fiveyeartotal_othervacant;
+tables group*structure/nopercent norow nocol out=structure_othervacant;
+weight hhwt_geo;
+run;
+proc sort data= structure_othervacant;
+by group;
+run;
+
+proc transpose data=structure_othervacant prefix=count out=structure_othervacant2;
+by group;
+ID structure;
+var count;
+run;
+proc export data=structure_othervacant2
+ 	outfile="&_dcdata_default_path\NCHsg\Prog\appendix_othervacantstructure_&date..csv"
+   dbms=csv
+   replace;
+   run;
+
+
+/*pct costburden*/
+
+proc freq data=fiveyeartotal_occ;
+tables Category*costburden/nopercent norow nocol out=costburden_group;
+weight hhwt_geo;
+run;
+proc sort data= costburden_group;
+by costburden;
+run;
+
+proc transpose data=costburden_group prefix=count out=costburden_group2;
+by costburden;
+ID Category;
+var count;
+run;
+proc export data=costburden_group2
+ 	outfile="&_dcdata_default_path\NCHsg\Prog\state_costburden_&date..csv"
+   dbms=csv
+   replace;
+   run;
+
+/*cost burden for appendix*/
+proc freq data=fiveyeartotal_occ;
+tables group*costburden/nopercent norow nocol out=costburden_appendix;
+weight hhwt_geo;
+run;
+proc sort data= costburden_appendix;
+by group;
+run;
+
+proc transpose data=costburden_appendix prefix=count out=costburden_appendix2;
+by group;
+ID costburden;
+var count;
+run;
+proc export data=costburden_appendix2
+ 	outfile="&_dcdata_default_path\NCHsg\Prog\appendix_costburden_&date..csv"
+   dbms=csv
+   replace;
+run;
+
+/* cost category*/
+proc freq data=fiveyeartotal_occ;
+tables Category*allcostlevel/nopercent norow nocol out=allcostlevel_group;
+weight hhwt_geo;
+run;
+
+proc sort data= allcostlevel_group;
+by allcostlevel;
+run;
+
+proc transpose data=allcostlevel_group prefix=count out=allcostlevel_group2;
+by allcostlevel;
+ID Category;
+var count;
+run;
+
+proc export data=allcostlevel_group2
+ 	outfile="&_dcdata_default_path\NCHsg\Prog\state_costlevel_&date..csv"
+   dbms=csv
+   replace;
+   run;
+
+/*cost category for appendix*/
+proc freq data= allunits;
+tables group*allcostlevel/nopercent norow nocol out=allcost_appendix;
+weight hhwt_geo;
+run;
+
+proc sort data= allcost_appendix;
+by group;
+run;
+
+proc transpose data=allcost_occappendix prefix=count out=allcost_appendix2;
+by group;
+ID allcostlevel;
+var count;
+run;
+
+proc export data=allcost_appendix2
+ 	outfile="&_dcdata_default_path\NCHsg\Prog\appendix_cost_&date..csv"
+   dbms=csv
+   replace;
+   run;
+
+
+/*population by 45 geo units*/
+
+proc freq data=fiveyeartotal_dem;
+tables group /nopercent norow nocol out=pop_group;
+weight perwt_geo;
+run;
+
+proc export data=pop_group
+ 	outfile="&_dcdata_default_path\NCHsg\Prog\population_45units_&date..csv"
+   dbms=csv
+   replace;
+   run;
+
+
 /*strcuture age*/
 
 proc freq data=allunits;
@@ -420,72 +641,49 @@ proc export data=structureyear_group2
    replace;
    run;
 
-/*pct costburden*/
-data allocc;
-merge fiveyeartotal_occ(in=a) categories;
-if a;
-by group ;
-run;
 
-proc freq data=allocc;
-tables Category*costburden/nopercent norow nocol out=costburden_group;
+/*regular structure and age appendix*/
+proc freq data=allunits;
+tables group*structureyear/nopercent norow nocol out=structureyear_appendix;
 weight hhwt_geo;
 run;
-proc sort data= costburden_group;
-by costburden;
+proc sort data= structureyear_appendix;
+by group;
 run;
 
-proc transpose data=costburden_group prefix=count out=costburden_group2;
-by costburden;
+proc transpose data=structureyear_appendix prefix=count out=structureyear_appendix2;
+by group;
+ID structureyear;
+var count;
+run;
+proc export data=structureyear_appendix2
+ 	outfile="&_dcdata_default_path\NCHsg\Prog\appendix_structureyear_regular_&date..csv"
+   dbms=csv
+   replace;
+   run;
+
+/*universe of units structure and age appendix*/
+data universe(label= "NC universe of housing 13-17 pooled");
+	set allunits fiveyeartotal_othervacant (in=a);
+run; 
+proc freq data=allunits;
+tables Category*structureyear/nopercent norow nocol out=structureyear_group;
+weight hhwt_geo;
+run;
+proc sort data= structureyear_group;
+by structureyear;
+run;
+
+proc transpose data=structureyear_group prefix=count out=structureyear_group2;
+by structureyear;
 ID Category;
 var count;
 run;
-proc export data=costburden_group2
- 	outfile="&_dcdata_default_path\NCHsg\Prog\state_costburden_&date..csv"
+proc export data=structureyear_group2
+ 	outfile="&_dcdata_default_path\NCHsg\Prog\state_structureyear_&date..csv"
    dbms=csv
    replace;
    run;
-
-/* cost category*/
-proc freq data=allocc;
-tables Category*allcostlevel/nopercent norow nocol out=allcostlevel_group;
-weight hhwt_geo;
-run;
-
-proc sort data= allcostlevel_group;
-by allcostlevel;
-run;
-
-proc transpose data=allcostlevel_group prefix=count out=allcostlevel_group2;
-by allcostlevel;
-ID Category;
-var count;
-run;
-
-proc export data=allcostlevel_group2
- 	outfile="&_dcdata_default_path\NCHsg\Prog\state_costlevel_&date..csv"
-   dbms=csv
-   replace;
-   run;
-
-/*population by 45 geo units*/
-
-proc freq data=fiveyeartotal_dem;
-tables group /nopercent norow nocol out=pop_group;
-weight perwt_geo;
-run;
-
-proc export data=pop_group
- 	outfile="&_dcdata_default_path\NCHsg\Prog\population_45units_&date..csv"
-   dbms=csv
-   replace;
-   run;
-
-
-
-
-
-
 
 
 
