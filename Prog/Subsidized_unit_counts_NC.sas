@@ -339,27 +339,6 @@ run;
 
 ods csvall close;
 
-ods csvall  body="&_dcdata_default_path\NCHsg\Prog\Subsidized_unit_counts_jurisdiction.csv";
-
-title3 "Projects and assisted units breakdown by jurisdiction";
-
-
-proc tabulate data=Work.ConstructionDates format=comma10. noseps missing;
-  class ProgCat / preloadfmt order=data;
-  class jurisdiction;
-  var mid_assistedunits moe_assistedunits;
-  table
-    /** Rows **/
-    all='Total' ProgCat=' ',
-    /** Columns **/
-    n='Projects'    
-    sum='Assisted Units By Jurisdiction' * (  all='Total' jurisdiction=' ' ) 
-      * (  mid_assistedunits='Est.' moe_assistedunits='+/-' )
-    ;
-  format ProgCat ProgCat. jurisdiction jurisdiction.;
-run;
-
-ods csvall close;
 
 ods csvall  body="&_dcdata_default_path\NCHsg\Prog\Subsidized_unit_counts_expire.csv";
 
