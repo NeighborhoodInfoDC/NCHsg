@@ -644,7 +644,7 @@ proc export data=structureyear_group2
 
 /*regular structure and age appendix*/
 proc freq data=allunits;
-tables group*structureyear/nopercent norow nocol out=structureyear_appendix;
+tables group*structureyear*structure/nopercent norow nocol out=structureyear_appendix;
 weight hhwt_geo;
 run;
 proc sort data= structureyear_appendix;
@@ -661,29 +661,78 @@ proc export data=structureyear_appendix2
    dbms=csv
    replace;
    run;
+data allunits_structure;
+set allunits;
 
-/*universe of units structure and age appendix*/
-data universe(label= "NC universe of housing 13-17 pooled");
-	set allunits fiveyeartotal_othervacant (in=a);
-run; 
-proc freq data=allunits;
-tables Category*structureyear/nopercent norow nocol out=structureyear_group;
+
+if UNITSSTR in (03, 04, 05, 06) then structure_cat=1;
+if UNITSSTR in (07, 08, 09, 10) then structure_cat=2;
+if UNITSSTR in (01, 02) then structure_cat=3;
+if UNITSSTR = 00 then structure_cat=4;
+
+run;
+
+   /*0-30 years*/
+proc freq data=allunits_structure (where=(structureyear=1));
+tables group*structure_cat/nopercent norow nocol out=structureyear_appendixa;
 weight hhwt_geo;
 run;
-proc sort data= structureyear_group;
-by structureyear;
+proc sort data= structureyear_appendixa;
+by group;
 run;
 
-proc transpose data=structureyear_group prefix=count out=structureyear_group2;
-by structureyear;
-ID Category;
+proc transpose data=structureyear_appendixa prefix=count out=structureyear_appendix2a;
+by group;
+ID structure_cat;
 var count;
 run;
-proc export data=structureyear_group2
- 	outfile="&_dcdata_default_path\NCHsg\Prog\state_structureyear_&date..csv"
+proc export data=structureyear_appendix2a
+ 	outfile="&_dcdata_default_path\NCHsg\Prog\appendix_structureyear_a_&date..csv"
    dbms=csv
    replace;
    run;
+   /*60+  years*/
+proc freq data=allunits_structure (where=(structureyear=3));
+tables group*structure_cat/nopercent norow nocol out=structureyear_appendixc;
+weight hhwt_geo;
+run;
+proc sort data= structureyear_appendixc;
+by group;
+run;
+
+proc transpose data=structureyear_appendixc prefix=count out=structureyear_appendix2c;
+by group;
+ID structure_cat;
+var count;
+run;
+proc export data=structureyear_appendix2c
+ 	outfile="&_dcdata_default_path\NCHsg\Prog\appendix_structureyear_c_&date..csv"
+   dbms=csv
+   replace;
+   run;
+
+   /*30-60 years*/
+proc freq data=allunits_structure (where=(structureyear=2));
+tables group*structure_cat/nopercent norow nocol out=structureyear_appendixb;
+weight hhwt_geo;
+run;
+proc sort data= structureyear_appendixb;
+by group;
+run;
+
+proc transpose data=structureyear_appendixb prefix=count out=structureyear_appendix2b;
+by group;
+ID structure_cat;
+var count;
+run;
+proc export data=structureyear_appendix2b
+ 	outfile="&_dcdata_default_path\NCHsg\Prog\appendix_structureyear_b_&date..csv"
+   dbms=csv
+   replace;
+   run;
+
+
+
 
 
 
