@@ -40,6 +40,7 @@ proc format;
     3 = "Hispanic"
 	4 = "Asian and Pacific Islander non-Hispanic "
 	5 = "All other non-Hispanic ";
+	6 = "American Indian and Alaska Native"
   value inc_cat
 
     1 = '20 percentile'
@@ -104,6 +105,7 @@ run;
 		 if race=1 then race1=1;
 		 else if race=2 then race1=2;
          else if race in (4 5 6) then race1=4;
+		 else if race=3 then race1=6; /*add Native American category per feedback*/
 		 else race1=5;
 		end;
 
