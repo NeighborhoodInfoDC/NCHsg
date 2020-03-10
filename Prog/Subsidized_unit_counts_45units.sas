@@ -358,12 +358,13 @@ title3 "Projects and assisted units breakdown by group";
 	end;
 %mend zpad;
 
-data pumatogroup2 ;
+data pumatogroup2 (rename=(newPUMACE10=pumace10));
 set NCHsg.puma_to_group;
 length newPUMACE10 $5;
 newPUMACE10=pumace10;
-%zpad(pumace10new); *= translate(right(pumace10),'0', '');
-pumace10= newPUMACE10;
+%zpad(newPUMACE10); *= translate(right(pumace10),'0', '');
+
+drop _i_ pumace10;
 run;
 
 /*merge dataset with puma to group crosswalk*/
@@ -371,15 +372,26 @@ proc sort data= ConstructionDates;
 by PUMACE10;
 run;
 
-data ConstructionDates2;
-set ConstructionDates;
-newPUMACE10= pumace10;
+data ConstructionDates_group;
+merge ConstructionDates2 (in=a drop=county2_char) pumatogroup2;
+if a;
+by pumace10;
+
+*PUMAs that are grouped; 
+ if countycode= "37097" then do; category=2;  county2_char="1900 or 2900"; end;
+ if countycode= "37129" then do; category=2;  county2_char="4600 or 4700"; end;
+ if countycode= "37133" then do; category=3;  county2_char="4100 or 4500"; end; 
+ if countycode= "37155" then do; category=4;  county2_char="4900 or 5100"; end;
+
 run;
 
-data ConstructionDates_group;
-merge ConstructionDates2 (in=a) pumatogroup2;
-if a;
-by newPUMACE10;
+*confirm no missing;
+proc freq data=ConstructionDates_group;
+tables county2_char;
+run;
+proc print data=ConstructionDates_group;
+where county2_char=" ";
+var countycode category county2_char pumace10 PUMA; 
 run;
 
 /*tabulate by group for appendix table*/
