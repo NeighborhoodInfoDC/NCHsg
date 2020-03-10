@@ -345,25 +345,47 @@ ods csvall  body="&_dcdata_default_path\NCHsg\Prog\Subsidized_unit_counts..csv";
 
 title3 "Projects and assisted units breakdown by group";
 
-data pumatogroup;
+
+%macro zpad(s);
+    * first, recommend aligning the variable values to the right margin to create leading blanks, if they dont exist already;
+	&s. = right(&s.);
+
+	* then fill them with zeros;
+	if trim(&s.) ~= "" then do;	
+		do _i_ = 1 to length(&s.) while (substr(&s.,_i_,1) = " ");
+			substr(&s.,_i_,1) = "0";
+		end;
+	end;
+%mend zpad;
+
+data pumatogroup2 ;
 set NCHsg.puma_to_group;
+length newPUMACE10 $5;
+newPUMACE10=pumace10;
+%zpad(pumace10new); *= translate(right(pumace10),'0', '');
+pumace10= newPUMACE10;
 run;
 
 /*merge dataset with puma to group crosswalk*/
 proc sort data= ConstructionDates;
-by puma;
+by PUMACE10;
+run;
+
+data ConstructionDates2;
+set ConstructionDates;
+newPUMACE10= pumace10;
 run;
 
 data ConstructionDates_group;
-merge ConstructionDates (in=a) pumatogroup;
+merge ConstructionDates2 (in=a) pumatogroup2;
 if a;
-by puma;
+by newPUMACE10;
 run;
 
 /*tabulate by group for appendix table*/
 proc tabulate data=Work.ConstructionDates_group format=comma10. noseps missing;
-  class group;
-  class ProgCat / preloadfmt order=data;
+  class ProgCat;
+  class  group/ preloadfmt order=data;
   var mid_assistedunits moe_assistedunits;
   table
     /** Rows **/
@@ -374,6 +396,7 @@ proc tabulate data=Work.ConstructionDates_group format=comma10. noseps missing;
       * (  mid_assistedunits='Est.' moe_assistedunits='+/-' )
     ;
   format ProgCat ProgCat. ;
+
 run;
 
 ods csvall close;
