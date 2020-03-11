@@ -373,7 +373,7 @@ by PUMACE10;
 run;
 
 data ConstructionDates_group;
-merge ConstructionDates2 (in=a drop=county2_char) pumatogroup2;
+merge ConstructionDates (in=a drop=county2_char) pumatogroup2;
 if a;
 by pumace10;
 
