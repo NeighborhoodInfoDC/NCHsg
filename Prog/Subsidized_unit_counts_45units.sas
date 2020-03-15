@@ -445,12 +445,25 @@ else if 2040=<earliest_expirationdate15<2050 then expire=3;
 else if earliest_expirationdate15>=2050 then expire=4;
 run;
 
-proc summary data= ConstructionDates_group;
-class group earliest_expirationdate15;
+proc summary data= ConstructionDates_group2;
+class group expire;
 var mid_assistedunits;
-output out= units_expiration sum=;
+output out= units_expiration(where= (_TYPE_=3)) sum=;
 run;
 
+proc sort data= units_expiration;
+by group;
+run;
+proc transpose data= units_expiration  prefix=count out=units_expiration2;
+by group;
+ID expire;
+var mid_assistedunits ;
+run;
+proc export data=units_expiration2
+	outfile="&_dcdata_default_path\NCHsg\Prog\Appendix_expiration_45units_&date..csv"
+	dbms=csv
+	replace;
+run;
 
 proc tabulate data=Work.ConstructionDates format=comma10. noseps missing;
   class ProgCat / preloadfmt order=data;
