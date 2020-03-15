@@ -401,7 +401,7 @@ proc tabulate data=Work.ConstructionDates_group format=comma10. noseps missing;
   var mid_assistedunits moe_assistedunits;
   table
     /** Rows **/
-    all='Total' ProgCat=' ',
+    all='Total' ,
     /** Columns **/
     n='Projects'    
     sum='Assisted Units By Group' * (  all='Total' group=' ' ) 
@@ -417,6 +417,24 @@ ods csvall  body="&_dcdata_default_path\NCHsg\Prog\Subsidized_unit_counts_expire
 
 title3 "Projects and assisted units with expiring subsidies";
 footnote1 "LIHTC expiration includes 15-year compliance and 30-year subsidy end dates.";
+
+proc summary data= ConstructionDates_group;
+class group ProgCat;
+var mid_assistedunits;
+output out= units_groups(where= (_TYPE_=3)) sum=;
+run;
+
+proc transpose data= units_groups  prefix=count out=units_groups2;
+by group;
+ID ProgCat;
+var mid_assistedunits ;
+run;
+
+proc export data=units_groups2
+	outfile="&_dcdata_default_path\NCHsg\Prog\Appendix_subsidized_45units_&date..csv"
+	dbms=csv
+	replace;
+run;
 
 proc tabulate data=Work.ConstructionDates format=comma10. noseps missing;
   class ProgCat / preloadfmt order=data;
