@@ -295,10 +295,9 @@ label
   run;
 
 *Create construction dates for affordable housing;
-%macro subsidizedunits(group);
 
 data Work.ConstructionDates;
-  set Work.SubsidyExpirationDates (where= (Category= &group.));
+  set Work.SubsidyExpirationDates;
   format LatestConstructionDate MMDDYY10.;
 if ProgCat in (1,2) then PHConstructionDate=LatestConstructionDate;
 If 1930 <= year (PHConstructionDate) <= 1950 then timecount = '1930-1950';
@@ -323,7 +322,7 @@ run;
 
 options missing=' ';
 
-ods csvall  body="&_dcdata_default_path\NCHsg\Prog\Subsidized_unit_counts_unique_&group..csv";
+ods csvall  body="&_dcdata_default_path\NCHsg\Prog\Subsidized_unit_counts_unique..csv";
 
 title3 "Project and assisted unit unique counts";
 
@@ -342,32 +341,129 @@ run;
 
 ods csvall close;
 
-ods csvall  body="&_dcdata_default_path\NCHsg\Prog\Subsidized_unit_counts_&group..csv";
+ods csvall  body="&_dcdata_default_path\NCHsg\Prog\Subsidized_unit_counts..csv";
 
-title3 "Projects and assisted units breakdown by jurisdiction";
+title3 "Projects and assisted units breakdown by group";
 
 
-proc tabulate data=Work.ConstructionDates format=comma10. noseps missing;
-  class ProgCat / preloadfmt order=data;
-  class jurisdiction;
+%macro zpad(s);
+    * first, recommend aligning the variable values to the right margin to create leading blanks, if they dont exist already;
+	&s. = right(&s.);
+
+	* then fill them with zeros;
+	if trim(&s.) ~= "" then do;	
+		do _i_ = 1 to length(&s.) while (substr(&s.,_i_,1) = " ");
+			substr(&s.,_i_,1) = "0";
+		end;
+	end;
+%mend zpad;
+
+data pumatogroup2 (rename=(newPUMACE10=pumace10));
+set NCHsg.puma_to_group;
+length newPUMACE10 $5;
+newPUMACE10=pumace10;
+%zpad(newPUMACE10); *= translate(right(pumace10),'0', '');
+
+drop _i_ pumace10;
+run;
+
+/*merge dataset with puma to group crosswalk*/
+proc sort data= ConstructionDates;
+by PUMACE10;
+run;
+
+data ConstructionDates_group;
+merge ConstructionDates (in=a drop=county2_char) pumatogroup2;
+if a;
+by pumace10;
+
+*PUMAs that are grouped; 
+ if countycode= "37097" then do; category=2;  county2_char="1900 or 2900"; end;
+ if countycode= "37129" then do; category=2;  county2_char="4600 or 4700"; end;
+ if countycode= "37133" then do; category=3;  county2_char="4100 or 4500"; end; 
+ if countycode= "37155" then do; category=4;  county2_char="4900 or 5100"; end;
+
+run;
+
+*confirm no missing;
+proc freq data=ConstructionDates_group;
+tables county2_char;
+run;
+proc print data=ConstructionDates_group;
+where county2_char=" ";
+var countycode category county2_char pumace10 PUMA; 
+run;
+
+/*tabulate by group for appendix table*/
+proc tabulate data=Work.ConstructionDates_group format=comma10. noseps missing;
+  class ProgCat;
+  class  group/ preloadfmt order=data;
   var mid_assistedunits moe_assistedunits;
   table
     /** Rows **/
-    all='Total' ProgCat=' ',
+    all='Total' ,
     /** Columns **/
     n='Projects'    
-    sum='Assisted Units By Group' * (  all='Total' jurisdiction=' ' ) 
+    sum='Assisted Units By Group' * (  all='Total' group=' ' ) 
       * (  mid_assistedunits='Est.' moe_assistedunits='+/-' )
     ;
-  format ProgCat ProgCat. jurisdiction jurisdiction.;
+  format ProgCat ProgCat. ;
+
 run;
 
 ods csvall close;
 
-ods csvall  body="&_dcdata_default_path\NCHsg\Prog\Subsidized_unit_counts_expire_&group..csv";
+ods csvall  body="&_dcdata_default_path\NCHsg\Prog\Subsidized_unit_counts_expire_45units..csv";
 
 title3 "Projects and assisted units with expiring subsidies";
 footnote1 "LIHTC expiration includes 15-year compliance and 30-year subsidy end dates.";
+
+proc summary data= ConstructionDates_group;
+class group ProgCat;
+var mid_assistedunits;
+output out= units_groups(where= (_TYPE_=3)) sum=;
+run;
+
+proc transpose data= units_groups  prefix=count out=units_groups2;
+by group;
+ID ProgCat;
+var mid_assistedunits ;
+run;
+
+proc export data=units_groups2
+	outfile="&_dcdata_default_path\NCHsg\Prog\Appendix_subsidized_45units_&date..csv"
+	dbms=csv
+	replace;
+run;
+
+/*appendix for expiration dates*/
+data ConstructionDates_group2;
+set ConstructionDates_group;
+if earliest_expirationdate15<2030 then expire=1;
+else if 2030=<earliest_expirationdate15<2040 then expire=2;
+else if 2040=<earliest_expirationdate15<2050 then expire=3;
+else if earliest_expirationdate15>=2050 then expire=4;
+run;
+
+proc summary data= ConstructionDates_group2;
+class group expire;
+var mid_assistedunits;
+output out= units_expiration(where= (_TYPE_=3)) sum=;
+run;
+
+proc sort data= units_expiration;
+by group;
+run;
+proc transpose data= units_expiration  prefix=count out=units_expiration2;
+by group;
+ID expire;
+var mid_assistedunits ;
+run;
+proc export data=units_expiration2
+	outfile="&_dcdata_default_path\NCHsg\Prog\Appendix_expiration_45units_&date..csv"
+	dbms=csv
+	replace;
+run;
 
 proc tabulate data=Work.ConstructionDates format=comma10. noseps missing;
   class ProgCat / preloadfmt order=data;
@@ -607,14 +703,6 @@ run;
 
 ods csvall close;
 
-%mend subsidizedunits;
-
-%subsidizedunits(1);
-%subsidizedunits(2);
-%subsidizedunits(3);
-%subsidizedunits(4);
-%subsidizedunits(5);
-%subsidizedunits(6);
 
 data estimateunitsperproject;
 	set SubsidyExpirationDates;

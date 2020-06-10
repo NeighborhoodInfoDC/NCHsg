@@ -118,6 +118,11 @@ data Work.Allassistedunits;
 	then State_activeunits = 1;
 	else State_activeunits = 0;
 
+	* for some reason not assigned RH units but have dates, balance and status; 
+	if RHS515_1_Status = "Active"  and RHS515_1_AssistedUnits in(. 0) and TotalUnits ~=. then rhs515_activeunits= 1;
+	if RHS538_1_Status = "Active"  and RHS538_1_AssistedUnits in(. 0) and TotalUnits ~=. then rhs538_activeunits= 1;
+	if LIHTC_1_Status  = "Active" and LIHTC_all_assistedunits in(. 0) and TotalUnits ~=. then LIHTC_activeunits = 1;
+
 	format State_activeunits PH_activeunits HOME_activeunits rhs538_activeunits rhs515_activeunits
 	LIHTC_activeunits FHA_activeunits s236_activeunits s202_activeunits s8_activeunits ActiveUnits.;
 run;
@@ -202,6 +207,17 @@ run;
 data Work.SubsidyExpirationDates;
 
   set Work.SubsidyCategories;
+
+  	*for some reason a few are missing units even with active status;
+	If (progcat=9 and rhs515_all_assistedunits=0 and rhs538_all_assistedunits=0 and RHS515_1_Status = "Active") 
+		then rhs515_all_assistedunits=TotalUnits; 
+
+	If (progcat=9 and rhs515_all_assistedunits=0 and rhs538_all_assistedunits=0 and RHS538_1_Status = "Active") 
+		then rhs538_all_assistedunits=TotalUnits; 
+	
+	If (progcat=6 and LIHTC_all_assistedunits=0 and  LIHTC_1_Status = "Active") 
+		then LIHTC_all_assistedunits=TotalUnits; 
+
 
   min_assistedunits = max( s8_all_assistedunits, s202_all_assistedunits, s236_all_assistedunits,FHA_all_assistedunits,
 	LIHTC_all_assistedunits,rhs515_all_assistedunits,rhs538_all_assistedunits,HOME_all_assistedunits ,PH_all_assistedunits,0);
@@ -323,27 +339,6 @@ run;
 
 ods csvall close;
 
-ods csvall  body="&_dcdata_default_path\NCHsg\Prog\Subsidized_unit_counts_jurisdiction.csv";
-
-title3 "Projects and assisted units breakdown by jurisdiction";
-
-
-proc tabulate data=Work.ConstructionDates format=comma10. noseps missing;
-  class ProgCat / preloadfmt order=data;
-  class jurisdiction;
-  var mid_assistedunits moe_assistedunits;
-  table
-    /** Rows **/
-    all='Total' ProgCat=' ',
-    /** Columns **/
-    n='Projects'    
-    sum='Assisted Units By Jurisdiction' * (  all='Total' jurisdiction=' ' ) 
-      * (  mid_assistedunits='Est.' moe_assistedunits='+/-' )
-    ;
-  format ProgCat ProgCat. jurisdiction jurisdiction.;
-run;
-
-ods csvall close;
 
 ods csvall  body="&_dcdata_default_path\NCHsg\Prog\Subsidized_unit_counts_expire.csv";
 
@@ -587,3 +582,31 @@ proc tabulate data=Work.ConstructionDates format=comma10. noseps missing;
 run;
 
 ods csvall close;
+
+
+/*units per project*/
+
+proc tabulate data=Work.ConstructionDates  format=comma10. noseps missing;
+  class ProgCat / preloadfmt order=data;
+  var totalunits;
+  table
+    /** Rows **/
+    all='Total' ProgCat=' ',
+    /** Columns **/
+    n='Projects'
+    sum='totalunits' * ( totalunits='Est.'  )
+    ;
+  format ProgCat ProgCat.;
+run;
+
+proc summary data= ConstructionDates;
+class ProgCat;
+var totalunits mid_assistedunits;
+output out= units_comparison sum=;
+run;
+
+data units_comparison1;
+set units_comparison (where = (_TYPE_=1));
+totalunits_per_project= TotalUnits/_FREQ_;
+assistedunits_per_project= mid_assistedunits/_FREQ_;
+run;
