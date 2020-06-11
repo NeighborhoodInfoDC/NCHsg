@@ -32,7 +32,7 @@
 %DCData_lib( NCHsg )
 %DCData_lib( Ipums )
 
-%let date=01152020; 
+%let date=02182020; 
 
 proc format;
 
@@ -100,57 +100,41 @@ proc format;
   1= 'natural affordable (rent < $700)'
   0= 'not natural affordable'; 
 run;
-data categories;
-set NCHsg.Puma_categories_121;
-run;
 
-/*read in dataset created by NCHousing_needs_units_targets.sas*/
-data fiveyeartotal;
-	set NCHsg.fiveyeartotal (drop= County) ;
-	by county2_char;
-	retain group 0;
-	if first.county2_char then group=group+1;
-run;
-
- data fiveyeartotal_vacant; 
-   set NCHsg.fiveyeartotal_vacant;
-	by county2_char;
-	retain group 0;
-	if first.county2_char then group=group+1;
- run;
-
- data fiveyeartotal_othervacant; 
-   set NCHsg.fiveyeartotal_othervacant ;
-	by county2_char;
-	retain group 0;
-	if first.county2_char then group=group+1;
- run;
-
+proc sort data=nchsg.fiveyeartotal_othervacant out=fiveyeartotal_othervacant;
+by county2_char;
 proc freq data=fiveyeartotal_othervacant;
 by county2_char;
 tables vacancy /nopercent norow nocol out=other_vacant;
 weight hhwt_geo;
 *format county2_char county2_char.;
 run; 
-proc export data=fiveyeartotal_othervacant
- 	outfile="&_dcdata_default_path\NCHsg\Prog\other_vacant_&date..csv"
+proc export data=other_vacant
+ 	outfile="&_dcdata_default_path\NCHsg\Prog\other_vacant_PUMA_&date..csv"
    dbms=csv
    replace;
    run;
-
+proc sort data=nchsg.fiveyeartotal_othervacant out=fiveyeartotal_othervacant_cat;
+by category;
+proc freq data=fiveyeartotal_othervacant_cat;
+by category;
+tables vacancy /nopercent norow nocol out=other_vacant_cat;
+weight hhwt_geo;
+*format county2_char county2_char.;
+run; 
+proc export data=other_vacant_cat
+ 	outfile="&_dcdata_default_path\NCHsg\Prog\other_vacant_cat_&date..csv"
+   dbms=csv
+   replace;
+   run;
 /*tabulate percent cost burdened by category and income quintiles*/
-data fiveyeartotal_cat;
-merge fiveyeartotal(in=a) categories;
-if a;
-by group ;
-run;
 
-proc freq data=fiveyeartotal_cat;
+proc freq data=nchsg.fiveyeartotal;
 tables Category*costburden /nopercent norow nocol out=costburden_group;
 weight hhwt_geo;
 run;
 
-proc freq data=fiveyeartotal_cat;
+proc freq data=nchsg.fiveyeartotal;
 tables Category*costburden*inc /nopercent norow nocol out=costburden_incgroup;
 weight hhwt_geo;
 run;
@@ -223,33 +207,20 @@ proc export data=burden_cat2
    run;
 
 /*monthly housing cost by classifications*/
-data monthlycost;
-set Fiveyeartotal_cat;
-cost= costratio* hhincome_a/12;
-keep county2_char group County_FIPS County Category cost hhwt_geo;
-run;
-/*
-proc summary data= monthlycost;
-class county2_char group Category;
-var cost;
-weight hhwt_geo;
-output out= monthlycost2(where= (_TYPE_=7)) mean=;
-run;
-*/
 
-proc freq data=Fiveyeartotal_cat;
+proc freq data=nchsg.fiveyeartotal;
 tables Category*allcostlevel /nofreq nopercent nocol out=allcostcat;
 weight hhwt_geo;
 run;
-proc freq data=Fiveyeartotal_cat;
+proc freq data=nchsg.fiveyeartotal;
 tables allcostlevel /nofreq nopercent nocol out=allcostcat2;
 weight hhwt_geo;
 run;
-proc freq data=Fiveyeartotal_cat;
+proc freq data=nchsg.fiveyeartotal;
 tables group*allcostlevel /nofreq nopercent nocol out=allcostcat3;
 weight hhwt_geo;
 run;
-proc freq data=Fiveyeartotal_cat;
+proc freq data=nchsg.fiveyeartotal;
 tables group /nofreq nopercent nocol out=allcostcat4;
 weight hhwt_geo;
 run;
@@ -272,20 +243,8 @@ ID allcostlevel;
 var percent;
 run;
 
-proc transpose data=structurecost out=structurecost2;
-by structure ;
-ID allcostlevel;
-var total;
-run;
 
 
-/*
-proc export data=monthlycost2
- 	outfile="&_dcdata_default_path\NCHsg\Prog\housingcost_cat_&date..csv"
-   dbms=csv
-   replace;
-   run;
-*/
 proc export data=allcostcat
  	outfile="&_dcdata_default_path\NCHsg\Prog\allcost_cat_&date..csv"
    dbms=csv
@@ -304,7 +263,10 @@ proc export data=allcostcat7
    run;
 
 /*cost by structure type*/
-proc summary data= Fiveyeartotal_cat;
+proc sort data=nchsg.fiveyeartotal out=fiveyeartotal_sort;
+by allcostlevel structure;
+
+proc summary data= fiveyeartotal_sort;
 class allcostlevel structure;
 var total;
 weight hhwt_geo;
@@ -314,6 +276,7 @@ run;
 proc sort data= structurecost;
 by structure;
 run;
+
 
 proc transpose data=structurecost out=structurecost2;
 by structure ;
@@ -327,7 +290,7 @@ proc export data=structurecost2
    replace;
    run;
 
-proc freq data=Fiveyeartotal_cat;
+proc freq data=nchsg.fiveyeartotal ;
 tables Category*structure /nofreq nopercent nocol out=structurecat;
 weight hhwt_geo;
 run;
@@ -344,7 +307,7 @@ proc export data=structurecat2
    replace;
    run;
 
-proc summary data= Fiveyeartotal_cat;
+proc summary data= nchsg.fiveyeartotal ;
 class group structure;
 weight hhwt_geo;
 var total;
@@ -366,10 +329,10 @@ proc export data=county_structure2
 
 /*future housing needs desired units*/
 /*jurisdiction desire and halfway (by tenure)*/
-proc sort data=Fiveyeartotal_cat;
+proc sort data=nchsg.fiveyeartotal ;
 by Category; 
 run;
-proc freq data=Fiveyeartotal_cat;
+proc freq data=nchsg.fiveyeartotal ;
 by Category;
 tables inc*mallcostlevel /nopercent norow nocol out=geo_desire;
 weight hhwt_geo;
@@ -382,7 +345,7 @@ by Category inc;
 var count;
 run;
 
-proc freq data=Fiveyeartotal_cat;
+proc freq data=nchsg.fiveyeartotal ;
 by Category;
 tables inc*mallcostlevel /nopercent norow nocol out=geo_desire_rent;
 weight hhwt_geo;
@@ -396,7 +359,7 @@ run;
 	var count;
 	run;
 
-proc freq data=Fiveyeartotal_cat;
+proc freq data=nchsg.fiveyeartotal ;
 by Category;
 tables inc*mallcostlevel /nopercent norow nocol out=geo_desire_own;
 weight hhwt_geo;
@@ -430,24 +393,10 @@ run;
 
 /*vacancy rate by cost level*/
 data fiveyeartotal_all;
-set fiveyeartotal fiveyeartotal_vacant;
+set nchsg.fiveyeartotal nchsg.fiveyeartotal_vacant;
 run;
 
-proc sort data= fiveyeartotal_all;
-by group;
-run;
-
-data fiveyeartotal_cat_all;
-merge fiveyeartotal_all(in=a) categories;
-if a;
-by group;
-run;
-
-proc sort data=Fiveyeartotal_cat_all;
-by Category; 
-run;
-
-proc summary data= fiveyeartotal_cat_all;
+proc summary data= fiveyeartotal_all;
 class Category allcostlevel vacancy;
 	var total;
 	weight hhwt_geo;
@@ -460,11 +409,11 @@ proc export data= geo_vacant
 	replace;
 run;
 
-proc sort data=Fiveyeartotal_cat;
+proc sort data=nchsg.fiveyeartotal;
 by Category; 
 run;
 
-proc summary data= fiveyeartotal_cat;
+proc summary data= nchsg.fiveyeartotal;
 class Category allcostlevel;
 	var total;
 	weight hhwt_geo;
@@ -478,25 +427,21 @@ proc export data= geo_nonvacant
 run;
 
 
-
-
-
-
-
-
 /*unsubsidized low cost stock*/
 
-data rental;
-set fiveyeartotal_cat (where= (tenure=1));
-if rentgrs=<700 then delete;
-if UNITSSTR = 00 then substrucutre=5;
-if UNITSSTR in (01, 02) then substrucutre=4;
-if UNITSSTR in (03, 04) then substrucutre=1;
-if UNITSSTR in (05, 06) then substrucutre=2;
-if UNITSSTR in (07, 08, 09, 10) then substrucutre=3;
-run;
+data affordable;
+set nchsg.fiveyeartotal  nchsg.fiveyeartotal_vacant ;
 
-proc freq data=rental;
+if UNITSSTR = 00 then substrucutre=5;
+if UNITSSTR in (01, 02) then substrucutre=3; *Mobile home, boat, etc. ;
+if UNITSSTR in (03, 04) then substrucutre=1; *single family;
+if UNITSSTR in (05, 06) then substrucutre=1; *2-4 units;
+if UNITSSTR in (07, 08, 09, 10) then substrucutre=2; *5+ units;
+run;
+proc sort data=affordable;
+by category;
+proc freq data=affordable;
+where (affordable=1 | affordable_vacant=1) and tenure=1;
 by category;
 tables substrucutre*structureyear /nopercent norow nocol out=geo_lowcost;
 weight hhwt_geo;
@@ -504,7 +449,7 @@ weight hhwt_geo;
 run;
 
 proc sort data=geo_lowcost;
-by category substructure structureyear;
+by category substrucutre structureyear;
 run;
 
 proc transpose data=geo_lowcost out=geo_lowcost2
@@ -520,7 +465,69 @@ proc export data=geo_lowcost2
 	replace;
 run;
 
+*owner-occ mobile homes - low cost by year;
+data affordable_mob;
+	set affordable;
 
+	if tenure=2 then do;
+		if owncost in ( 9999999, .n , . ) then affordable=.;
+			else do; 
+			    if owncost_a<700 then affordable=1;
+				else if owncost_a>=700 then affordable=0;
+				
+			end;
 
+	    if vacancy ~= . then do;
+			   if total_month < 700 then affordable=1;
+			   else if total_month>=700 then affordable=0;
 
+			end;
+	end;
 
+run; 
+proc sort data=affordable_mob;
+by category;
+proc freq data=affordable_mob;
+where (affordable=1 and tenure=2);
+by category;
+tables substrucutre*structureyear /nopercent norow nocol out=geo_lowcost_own;
+weight hhwt_geo;
+*format county2_char county2_char. mallcostlevel;
+run;
+
+proc sort data=geo_lowcost_own;
+by category substrucutre structureyear;
+run;
+
+proc transpose data=geo_lowcost_own out=geo_lowcost_own2
+prefix= level;
+id structureyear;
+by category substrucutre;
+var count;
+run;
+
+proc export data=geo_lowcost_own2
+	outfile="&_dcdata_default_path\NCHsg\Prog\geo_lowcost_own_&date..csv"
+	dbms=csv
+	replace;
+	run;
+
+**age of mobile homes in detail;
+
+data affordable_mob2;
+ set affordable_mob;
+
+ 	if BUILTYR2 in ( 00, 9999999, .n , . ) then structureyear_alt=.;
+		else do; 
+		    if BUILTYR2  in (08, 09, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22) then structureyear_alt=1;
+			else if BUILTYR2  in (07) then structureyear_alt=2; *1990-1999;
+			else if BUILTYR2  in (05, 06) then structureyear_alt=3; *1970-89;
+			else if BUILTYR2  in (04) then structureyear_alt=4; *1960-1969; 
+            else if BUILTYR2 in (01, 02, 03)  then structureyear_alt=5; *before 1960;
+		end;
+run;
+proc freq data=affordable_mob2;
+where UNITSSTR=01;
+tables category*structureyear_alt /nopercent norow nocol out=geo_all_mob;
+weight hhwt_geo;
+run; 
