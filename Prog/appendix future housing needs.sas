@@ -103,11 +103,11 @@ data five;
 set nchsg.fiveyeartotal ;
 run;
 
-proc sort data=nchsg.fiveyeartotal ;
+proc sort data=five ;
 by group; 
 run;
 
-proc freq data=nchsg.fiveyeartotal ;
+proc freq data=five ;
 by group;
 tables inc*mallcostlevel /nopercent norow nocol out=geo_desire;
 weight hhwt_geo;
@@ -120,20 +120,13 @@ by group inc;
 var count;
 run;
 
-	proc transpose data=geo_desire_rent out=geo_dr
-	prefix=level;
-	id mallcostlevel;
-	by Category inc;
-	var count;
-	run;
-
 /*vacant units by cist*/
 
-proc sort data= nchsg.fiveyeartotal_vacant;
+proc sort data= nchsg.fiveyeartotal_vacant out=five_vacant;
 by group;
 run;
 
-proc freq data=nchsg.fiveyeartotal_vacant;
+proc freq data=five_vacant;
 by group;
 tables allcostlevel /nopercent norow nocol out=geo_vacant;
 weight hhwt_geo;
@@ -158,8 +151,7 @@ data geo_desire_units (drop=_label_ _name_);
 	run; 
 
 /*export all 45 units of geography*/ 
-proc sort data= geo_desire_units ;
-by Category inc;
+
 
 proc export data=geo_desire_units 
 	outfile="&_dcdata_default_path\NCHsg\Prog\appendix_unitsdesired_&date..csv"
